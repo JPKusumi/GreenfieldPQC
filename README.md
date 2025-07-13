@@ -14,4 +14,4 @@ Enter Kyber, the post-quantum hero of key encapsulation mechanisms (KEMs). It's 
 
 5. **Bob Decrypts and Enjoys**: Bob uses the same shared Kusumi512 key to decrypt the photos and verify the Poly1305 tag. If everything checks out, he sees the images perfectly. If not, he knows something's fishy.
 
-In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approach—post-quantum key exchange plus symmetric encryption—is the gold standard for future-proofing, enabled by your GreenfieldPQC toolkit. If quantum threats escalate, they're ready!
+In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approach—post-quantum key exchange plus symmetric encryption—is the gold standard for future-proofing, enabled by this GreenfieldPQC toolkit for .NET developers. If quantum threats escalate, they're ready!
