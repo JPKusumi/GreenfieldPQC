@@ -318,7 +318,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void Hash_NullInput_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoFactory.ComputeSHA256(null));
+            Assert.Throws<ArgumentNullException>(static () => CryptoFactory.ComputeSHA256((byte[])null));
             Log("SHA256_Hash_NullInput_Throws passed");
         }
     }
@@ -389,7 +389,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void Hash_NullInput_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoFactory.ComputeSHA512(null));
+            Assert.Throws<ArgumentNullException>(() => CryptoFactory.ComputeSHA512((byte[])null));
             Log("SHA512_Hash_NullInput_Throws passed");
         }
     }

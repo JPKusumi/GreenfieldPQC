@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 
 namespace GreenfieldPQC.Cryptography
@@ -50,14 +51,30 @@ namespace GreenfieldPQC.Cryptography
 
         public static byte[] ComputeSHA256(byte[] data)
         {
-            using var sha = new SHA256();
-            return sha.HashSync(data);
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            using SHA256 sha = SHA256.Create();
+            return sha.ComputeHash(data);
+        }
+
+        public static byte[] ComputeSHA256(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using SHA256 sha = SHA256.Create();
+            return sha.ComputeHash(stream);
         }
 
         public static byte[] ComputeSHA512(byte[] data)
         {
-            using var sha = new SHA512();
-            return sha.HashSync(data);
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            using SHA512 sha = SHA512.Create();
+            return sha.ComputeHash(data);
+        }
+
+        public static byte[] ComputeSHA512(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using SHA512 sha = SHA512.Create();
+            return sha.ComputeHash(stream);
         }
 
         private static byte[] GenerateBytes(int length)

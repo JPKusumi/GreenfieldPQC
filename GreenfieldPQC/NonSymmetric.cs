@@ -17,105 +17,78 @@ namespace GreenfieldPQC.Cryptography
         string AlgorithmName { get; }
     }
 
-    /// <summary>
-    /// Interface for hash functions.
-    /// </summary>
-    public interface IHash : ICryptoPrimitive
+    // ... other using statements ...
+
+    namespace GreenfieldPQC.Cryptography
     {
-        Task<byte[]> Hash(byte[] input, CancellationToken cancellationToken = default);
-        byte[] HashSync(byte[] input);
-        Task<byte[]> Hash(Stream input, CancellationToken cancellationToken = default);
-        byte[] HashSync(Stream input);
+        /// <summary>
+        /// SHA-256 hash function, matching Microsoft's API.
+        /// Instances are not thread-safe for concurrent use.
+        /// </summary>
+        public sealed class SHA256 : IDisposable
+        {
+            private readonly System.Security.Cryptography.SHA256 _sha256;
+
+            private SHA256()
+            {
+                _sha256 = System.Security.Cryptography.SHA256.Create();
+            }
+
+            public static SHA256 Create() => new SHA256();
+
+            public byte[] ComputeHash(byte[] input)
+            {
+                if (input == null) throw new ArgumentNullException(nameof(input));
+                return _sha256.ComputeHash(input);
+            }
+
+            public byte[] ComputeHash(Stream input)
+            {
+                if (input == null) throw new ArgumentNullException(nameof(input));
+                return _sha256.ComputeHash(input);
+            }
+
+            public void Dispose()
+            {
+                _sha256?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// SHA-512 hash function, matching Microsoft's API.
+        /// Instances are not thread-safe for concurrent use.
+        /// </summary>
+        public sealed class SHA512 : IDisposable
+        {
+            private readonly System.Security.Cryptography.SHA512 _sha512;
+
+            private SHA512()
+            {
+                _sha512 = System.Security.Cryptography.SHA512.Create();
+            }
+
+            public static SHA512 Create() => new SHA512();
+
+            public byte[] ComputeHash(byte[] input)
+            {
+                if (input == null) throw new ArgumentNullException(nameof(input));
+                return _sha512.ComputeHash(input);
+            }
+
+            public byte[] ComputeHash(Stream input)
+            {
+                if (input == null) throw new ArgumentNullException(nameof(input));
+                return _sha512.ComputeHash(input);
+            }
+
+            public void Dispose()
+            {
+                _sha512?.Dispose();
+            }
+        }
+
+        // ... Kyber, Dilithium (or ML-DSA), etc. ...
     }
-
-    /// <summary>
-    /// SHA-256 hash function wrapper around Microsoft implementation.
-    /// </summary>
-    public sealed class SHA256 : IHash
-    {
-        private readonly SHA256Managed _sha256;
-
-        public SHA256()
-        {
-            _sha256 = new SHA256Managed();
-        }
-
-        public string AlgorithmName => "SHA-256";
-
-        public async Task<byte[]> Hash(byte[] input, CancellationToken cancellationToken = default)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return await Task.FromResult(_sha256.ComputeHash(input)).ConfigureAwait(false);
-        }
-
-        public byte[] HashSync(byte[] input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha256.ComputeHash(input);
-        }
-
-        public async Task<byte[]> Hash(Stream input, CancellationToken cancellationToken = default)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return await Task.FromResult(_sha256.ComputeHash(input)).ConfigureAwait(false);
-        }
-
-        public byte[] HashSync(Stream input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha256.ComputeHash(input);
-        }
-
-        public void Dispose()
-        {
-            _sha256?.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// SHA-512 hash function wrapper around Microsoft implementation.
-    /// </summary>
-    public sealed class SHA512 : IHash
-    {
-        private readonly SHA512Managed _sha512;
-
-        public SHA512()
-        {
-            _sha512 = new SHA512Managed();
-        }
-
-        public string AlgorithmName => "SHA-512";
-
-        public async Task<byte[]> Hash(byte[] input, CancellationToken cancellationToken = default)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return await Task.FromResult(_sha512.ComputeHash(input)).ConfigureAwait(false);
-        }
-
-        public byte[] HashSync(byte[] input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha512.ComputeHash(input);
-        }
-
-        public async Task<byte[]> Hash(Stream input, CancellationToken cancellationToken = default)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return await Task.FromResult(_sha512.ComputeHash(input)).ConfigureAwait(false);
-        }
-
-        public byte[] HashSync(Stream input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha512.ComputeHash(input);
-        }
-
-        public void Dispose()
-        {
-            _sha512?.Dispose();
-        }
-    }
-
     [StructLayout(LayoutKind.Sequential)]
     internal struct OQS_KEM
     {

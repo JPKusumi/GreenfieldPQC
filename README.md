@@ -110,8 +110,15 @@ Security: Unique nonces/keys; no reuse. For streams >1MB, use nonceGen.
 
 ### Hashing
 ```csharp
-byte[] data = Encoding.UTF8.GetBytes("Hash me");
-byte[] sha512 = CryptoFactory.ComputeSHA512(data);
+byte[] data = Encoding.UTF8.GetBytes("Hash me");  
+
+// Static (one-off, thread-safe)  
+byte[] hash = CryptoFactory.ComputeSHA256(data); // or ComputeSHA256(stream)  
+
+// Instance (reusable per-thread)  
+using SHA256 sha = SHA256.Create();  
+byte[] hash = sha.ComputeHash(data); // or sha.ComputeHash(stream)  
+byte[] sha512 = CryptoFactory.ComputeSHA512(data);  
 ```
 
 ### AEAD Encryption
