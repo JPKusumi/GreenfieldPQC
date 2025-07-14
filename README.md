@@ -100,11 +100,6 @@ Kyber/Dilithium via P/Invoke to oqs.dll.
 
 Parameters in `GreenfieldPQC.Cryptography.Parameters`.
 
-### IHash (for SHA256/SHA512)
-- **HashSync(byte[] input)**: Computes hash.
-- **Hash(Stream input)**: Async from stream.
-
-Security: Unique nonces/keys; no reuse. For streams >1MB, use nonceGen.
 
 ## Usage Examples
 
