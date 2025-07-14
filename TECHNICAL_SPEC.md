@@ -157,14 +157,17 @@ for each 100-byte block of plaintext:
 #### 2.4.2. Example and Test Vector for the Kusumi-512 Cipher
 
 Plaintext: "No man is an island, entire of itself; every man is a piece of the continent, a part of the main. If a clod be washed away by the sea, Europe is the less, as well as if a promontory were, as well as if a manor of thy friend's or of thine own were: any man's death diminishes me, because I am involved in mankind, and therefore never send to know for whom the bell tolls; it tolls for thee."  
+  
 Key: 0E:22:7B:32:86:79:AA:12:8A:A8:44:C3:D2:5A:79:ED:6D:DE:8C:FA:82:8E:99:7E:F7:56:BD:0B:4E:E4:37:38:70:44:B6:79:97:16:6D:45:04:C5:83:E8:64:B8:A3:3D:D1:A8:E0:83:4A:63:9A:6E:8B:B2:85:68:EE:85:EF:5F (64 bytes)  
+  
 Nonce: 99:27:A4:15:54:1D:83:41:63:A3:46:77 (12 bytes)  
+  
 Ciphertext (hex):  
 0A:37:2A:7B:53:CB:87:A5:0F:91:52:C6:CA:75:64:58:93:30:4C:61:31:B1:FF:77:A9:88:28:5A:2B:BB:4F:A2:BC:E2:8A:8D:4C:E6:AA:47:89:C5:BD:9F:89:B8:07:7A:24:C1:0E:8B:C1:EF:BA:C0:84:74:FC:DF:EA:D6:B7:E0:85:89:5A:3E:24:2C:07:65:21:B4:44:0A:66:A3:C8:4E:25:AA:C0:37:83:F4:81:A4:A2:F1:28:84:6C:EB:E1:8A:B3:02:1A:62:77:B6:D1:10:A1:61:32:E6:55:A4:DC:1D:78:1C:5A:60:0D:C2:13:C0:25:AD:2C:D2:29:C4:F6:44:E5:5B:4D:FF:FD:B3:85:B6:67:82:F5:33:15:5F:BE:46:78:F6:90:B2:F0:2A:C2:06:E0:9C:46:98:7C:21:0A:27:30:BD:8A:5D:04:7F:6F:14:45:65:D9:E5:36:19:06:54:80:C7:59:CA:69:DF:40:E4:D6:F8:62:90:2B:E4:34:D2:E8:62:1B:0F:F3:A0:4D:3E:FC:03:6C:21:54:20:4B:31:35:5C:43:D5:15:3B:2D:A6:B2:AC:1D:C1:0C:C6:1E:DB:47:61:B8:99:54:E6:43:AE:BA:89:A9:D5:FE:22:C1:CE:63:08:15:E4:C1:79:1D:F1:92:53:6C:C4:51:DE:8B:63:14:A1:FC:6A:84:20:28:6F:A3:EC:B6:A0:3D:F8:CB:E9:BF:0A:BD:DE:1E:88:13:C0:26:93:91:E1:91:F0:BA:3A:47:1E:43:87:A1:77:9F:D6:0A:86:B2:E7:E3:1E:CA:1A:10:70:33:7B:2F:27:5C:24:23:E7:7E:77:C8:C6:39:0B:F4:BB:B0:A8:C3:71:87:C0:06:02:EA:58:47:8E:25:1A:E0:A8:26:52:AF:1B:09:2C:77:D3:92:DE:A2:4E:E5:E0:0A:4C:A8:C2:B4:31:E1:95:C9:2F:68:72:4F:F1:87:4D:2A:FC:1F:15:59:41:BE:3D:9C:54:5D:E2:DF:2C:15:18:0B:B7:3F:3F:BD  
 
 ## 3. Implementation Advice
 
-Implement in constant time to avoid timing attacks. Use 32-bit operations for efficiency. Parallelize rounds if possible. The enlarged state provides better security margins but may require careful memory management. The reduction to 10 rounds improves performance while maintaining a conservative security margin; implementations SHOULD use Unsafe pointers or equivalent for optimized state access in .NET environments.
+Implement in constant time to avoid timing attacks. Use 32-bit operations for efficiency. Parallelize rounds if possible. The enlarged state provides better security margins but may require careful memory management. The optimization to 10 rounds improves performance while maintaining a conservative security margin; implementations SHOULD use Unsafe pointers or equivalent for optimized state access in .NET environments.
 
 ## 4. Security Considerations
 
