@@ -9,3 +9,5 @@ To verify the performance claims against Threefish-512, I translated Kusumi512 t
 - **Memory Allocation**: Approximate object sizes (including states/keys) show Kusumi512 at ~1,229 bytes vs. Threefish-512 at ~1,712 bytes. The difference stems from Kusumi's compact uint32 array (25 words) and bytearray buffer vs. Threefish's uint64 lists (9 key + 3 tweak words). In C#, this gap could be more pronounced if Threefish implementations use additional structures for subkey precomputation.
 
 Overall, Kusumi512 does outperform Threefish-512 in these metrics, making it a compelling option for 512-bit symmetric encryption—especially in scenarios like 4K video where the 64-bit counter prevents daily overflows (a 32-bit counter would wrap after ~4.29 GB, but 64 bits handle ~18 exabytes). A winner for the space!
+
+See also, the BENCHMARKS.md file for more details on the performance tests and comparisons with Threefish-512.

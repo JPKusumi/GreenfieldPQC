@@ -15,7 +15,7 @@ Key findings indicate that Kusumi512 outperforms Threefish-512 in execution time
 - **Benchmark Tool**: BenchmarkDotNet v0.15.2.
 - **Data Sizes**: 1KB (1024 bytes) and 1MB (1,048,576 bytes) of random data.
 - **Modes Tested**: Encrypt (array-based), EncryptInPlace (span-based), EncryptStream (stream-based).
-- **Optimizations**: Kusumi512 incorporates reduced rounds (10 from 12) and Unsafe pointers for cache efficiency; Threefish-512 uses standard 64-bit word operations.
+- **Optimizations**: Kusumi512 incorporates 10 rounds and Unsafe pointers for cache efficiency; Threefish-512 uses standard 64-bit word operations.
 
 Python simulations were conducted in a pure-software environment (no hardware accel) to isolate algorithmic efficiency, using equivalent implementations for 1MB data.
 

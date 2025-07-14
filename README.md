@@ -82,7 +82,7 @@ Interface for symmetric ops (useful for mocking/testing).
 
 For AEAD: Ciphertext appends 128-bit tag; decryption throws on invalid.
 
-### NonSymmetric.cs (Kyber and Dilithium)
+### Asymmetric cryptography (Kyber and Dilithium)
 Kyber/Dilithium via P/Invoke to oqs.dll.
 
 #### Kyber (KEM)
