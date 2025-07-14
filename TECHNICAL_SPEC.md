@@ -195,7 +195,7 @@ A.1. Kusumi-512 Block Functions
 
 ## Appendix B.  Performance Measurements of Kusumi-512
 
-On Intel i9-11900H with .NET 8: Kusumi-512 achieves ~6.4 μs for 1MB encryption (0.92x vs. Threefish-512), with ~2048 KB allocation (0.59x vs. Threefish). Python simulations show comparable efficiency, often faster than Threefish in pure-software contexts.
+On Intel i9-11900H with .NET 8: Kusumi-512 achieves ~6.4 μs for 1MB encryption (0.92x vs. Threefish-512), with ~2048 KB allocation (0.59x vs. Threefish). Python simulations show comparable efficiency, often faster than Threefish in pure-software contexts. See also, BENCHMARKS.md (of the same repo) for more performance measures.
 
 ## Acknowledgements
 
