@@ -101,10 +101,10 @@ namespace GreenfieldPQC.Benchmarks
             StringBuilder hex = new StringBuilder(bytes.Length * 3);
             foreach (byte b in bytes)
             {
-                //if (hex.Length > 0) hex.Append(":");
+                if (hex.Length > 0) hex.Append(":");
                 hex.AppendFormat("{0:x2}", b);
             }
-            return hex.ToString();
+            return hex.ToString().ToUpper();
         }
         //string ByteArrayToHexString(byte[] bytes)
         //{
