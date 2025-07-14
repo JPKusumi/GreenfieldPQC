@@ -152,5 +152,3 @@ bool verified = dilithium.VerifySync(plaintextBytes, sig, pubKey);
 - Nonce uniqueness critical.
 - Quantum-safe with large keys/PQC.
 - Constant-time; audit for production.
-
-In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approach—post-quantum key exchange plus symmetric encryption—is the gold standard for future-proofing, enabled by this GreenfieldPQC toolkit for .NET developers. If quantum threats escalate, they're ready!
