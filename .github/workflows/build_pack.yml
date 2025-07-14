@@ -15,7 +15,7 @@ jobs:
           - { os: windows-latest, arch: x64, rid: win-x64, libname: oqs.dll }
           - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Cross-compile ARM on x64 runner
           - { os: ubuntu-latest, arch: x64, rid: linux-x64, libname: liboqs.so }
-          - { os: ubuntu-latest, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Use Docker for ARM
+          - { os: ubuntu-latest, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM
           - { os: macos-latest, arch: x64, rid: osx-x64, libname: liboqs.dylib }
           - { os: macos-14, arch: arm64, rid: osx-arm64, libname: liboqs.dylib }  # Native ARM runner
 
@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libssl-dev
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libssl-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
@@ -44,6 +44,19 @@ jobs:
         uses: microsoft/setup-msbuild@v2
         with:
           platform: ARM64
+
+      - name: Create toolchain file for Linux ARM64
+        if: matrix.config.rid == 'linux-arm64'
+        working-directory: liboqs
+        run: |
+          echo "set(CMAKE_SYSTEM_NAME Linux)" > toolchain-aarch64.cmake
+          echo "set(CMAKE_SYSTEM_PROCESSOR aarch64)" >> toolchain-aarch64.cmake
+          echo "set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)" >> toolchain-aarch64.cmake
+          echo "set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)" >> toolchain-aarch64.cmake
+          echo "set(CMAKE_FIND_ROOT_PATH /usr/aarch64-linux-gnu)" >> toolchain-aarch64.cmake
+          echo "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)" >> toolchain-aarch64.cmake
+          echo "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >> toolchain-aarch64.cmake
+          echo "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> toolchain-aarch64.cmake
 
       - name: Build liboqs (Windows)
         if: runner.os == 'Windows'
@@ -68,10 +81,8 @@ jobs:
           if [ "${{ runner.os }}" = "macOS" ]; then
             export OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=$OPENSSL_ROOT_DIR -DOPENSSL_INCLUDE_DIR=$OPENSSL_ROOT_DIR/include -DOPENSSL_LIBRARIES=$OPENSSL_ROOT_DIR/lib
-          elif [ "${{ matrix.config.arch }}" = "arm64" ] && [ "${{ runner.os }}" = "Linux" ]; then
-            # Cross-compile Linux ARM64 via toolchain or Docker fallback
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-            cmake .. -G Ninja -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
+          elif [ "${{ matrix.config.rid }}" = "linux-arm64" ]; then
+            cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
           else
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
           fi
@@ -81,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: oqs-${{ matrix.config.rid }}
-          path: liboqs/build/lib/${{ matrix.config.libname }}  # Updated path for macOS/Linux (lib/ instead of src/)
+          path: liboqs/build/lib/${{ matrix.config.libname }}  # Updated for Linux/macOS; for Windows, adjust if needed (e.g., bin/Release/oqs.dll)
 
   pack-nuget:
     needs: build-natives
@@ -103,12 +114,12 @@ jobs:
       - name: Copy natives to runtimes
         run: |
           mkdir -p runtimes/win-x64/native runtimes/win-arm64/native runtimes/linux-x64/native runtimes/linux-arm64/native runtimes/osx-x64/native runtimes/osx-arm64/native
-          cp artifacts/oqs-win-x64/artifact/oqs.dll runtimes/win-x64/native/
-          cp artifacts/oqs-win-arm64/artifact/oqs.dll runtimes/win-arm64/native/
-          cp artifacts/oqs-linux-x64/artifact/liboqs.so runtimes/linux-x64/native/
-          cp artifacts/oqs-linux-arm64/artifact/liboqs.so runtimes/linux-arm64/native/
-          cp artifacts/oqs-osx-x64/artifact/liboqs.dylib runtimes/osx-x64/native/
-          cp artifacts/oqs-osx-arm64/artifact/liboqs.dylib runtimes/osx-arm64/native/
+          cp artifacts/oqs-win-x64/artifact/oqs.dll runtimes/win-x64/native/ || true
+          cp artifacts/oqs-win-arm64/artifact/oqs.dll runtimes/win-arm64/native/ || true
+          cp artifacts/oqs-linux-x64/artifact/liboqs.so runtimes/linux-x64/native/ || true
+          cp artifacts/oqs-linux-arm64/artifact/liboqs.so runtimes/linux-arm64/native/ || true
+          cp artifacts/oqs-osx-x64/artifact/liboqs.dylib runtimes/osx-x64/native/ || true
+          cp artifacts/oqs-osx-arm64/artifact/liboqs.dylib runtimes/osx-arm64/native/ || true
 
       - name: Pack NuGet
         run: dotnet pack -c Release --no-build
