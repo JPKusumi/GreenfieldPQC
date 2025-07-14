@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace GreenfieldPQC.Cryptography
@@ -17,78 +16,72 @@ namespace GreenfieldPQC.Cryptography
         string AlgorithmName { get; }
     }
 
-    // ... other using statements ...
-
-    namespace GreenfieldPQC.Cryptography
+    /// <summary>
+    /// SHA-256 hash function, matching Microsoft's API.
+    /// Instances are not thread-safe for concurrent use.
+    /// </summary>
+    public sealed class SHA256 : IDisposable
     {
-        /// <summary>
-        /// SHA-256 hash function, matching Microsoft's API.
-        /// Instances are not thread-safe for concurrent use.
-        /// </summary>
-        public sealed class SHA256 : IDisposable
+        private readonly System.Security.Cryptography.SHA256 _sha256;
+
+        private SHA256()
         {
-            private readonly System.Security.Cryptography.SHA256 _sha256;
-
-            private SHA256()
-            {
-                _sha256 = System.Security.Cryptography.SHA256.Create();
-            }
-
-            public static SHA256 Create() => new SHA256();
-
-            public byte[] ComputeHash(byte[] input)
-            {
-                if (input == null) throw new ArgumentNullException(nameof(input));
-                return _sha256.ComputeHash(input);
-            }
-
-            public byte[] ComputeHash(Stream input)
-            {
-                if (input == null) throw new ArgumentNullException(nameof(input));
-                return _sha256.ComputeHash(input);
-            }
-
-            public void Dispose()
-            {
-                _sha256?.Dispose();
-            }
+            _sha256 = System.Security.Cryptography.SHA256.Create();
         }
 
-        /// <summary>
-        /// SHA-512 hash function, matching Microsoft's API.
-        /// Instances are not thread-safe for concurrent use.
-        /// </summary>
-        public sealed class SHA512 : IDisposable
+        public static SHA256 Create() => new SHA256();
+
+        public byte[] ComputeHash(byte[] input)
         {
-            private readonly System.Security.Cryptography.SHA512 _sha512;
-
-            private SHA512()
-            {
-                _sha512 = System.Security.Cryptography.SHA512.Create();
-            }
-
-            public static SHA512 Create() => new SHA512();
-
-            public byte[] ComputeHash(byte[] input)
-            {
-                if (input == null) throw new ArgumentNullException(nameof(input));
-                return _sha512.ComputeHash(input);
-            }
-
-            public byte[] ComputeHash(Stream input)
-            {
-                if (input == null) throw new ArgumentNullException(nameof(input));
-                return _sha512.ComputeHash(input);
-            }
-
-            public void Dispose()
-            {
-                _sha512?.Dispose();
-            }
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            return _sha256.ComputeHash(input);
         }
 
-        // ... Kyber, Dilithium (or ML-DSA), etc. ...
+        public byte[] ComputeHash(Stream input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            return _sha256.ComputeHash(input);
+        }
+
+        public void Dispose()
+        {
+            _sha256?.Dispose();
+        }
     }
+
+    /// <summary>
+    /// SHA-512 hash function, matching Microsoft's API.
+    /// Instances are not thread-safe for concurrent use.
+    /// </summary>
+    public sealed class SHA512 : IDisposable
+    {
+        private readonly System.Security.Cryptography.SHA512 _sha512;
+
+        private SHA512()
+        {
+            _sha512 = System.Security.Cryptography.SHA512.Create();
+        }
+
+        public static SHA512 Create() => new SHA512();
+
+        public byte[] ComputeHash(byte[] input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            return _sha512.ComputeHash(input);
+        }
+
+        public byte[] ComputeHash(Stream input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            return _sha512.ComputeHash(input);
+        }
+
+        public void Dispose()
+        {
+            _sha512?.Dispose();
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct OQS_KEM
     {
@@ -133,6 +126,7 @@ namespace GreenfieldPQC.Cryptography
         public IntPtr verify;
         public IntPtr verify_with_ctx_str;
     }
+
     public sealed class Kyber : ICryptoPrimitive
     {
         private readonly KyberParameters _parameters;
@@ -141,16 +135,17 @@ namespace GreenfieldPQC.Cryptography
         public Kyber(KyberParameters parameters)
         {
             _parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
-            _algName = $"Kyber{_parameters.SecurityLevel}";
+            // Updated to use standardized ML-KEM for future-proofing (equivalent to Kyber but with NIST spec changes)
+            _algName = $"ML-KEM-{_parameters.SecurityLevel}";
         }
 
-        public string AlgorithmName => $"Kyber-{_parameters.SecurityLevel}";
+        public string AlgorithmName => _algName;
 
-        public (byte[] PublicKey, byte[] PrivateKey) GenerateKeyPairSync()
+        public (byte[] PublicKey, byte[] PrivateKey) GenerateKeyPair()
         {
             IntPtr kem = LibOqsInterop.OQS_KEM_new(_algName);
             if (kem == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Kyber KEM for {_algName}.");
+                throw new CryptographicException($"Failed to create KEM for {_algName}.");
 
             try
             {
@@ -161,7 +156,7 @@ namespace GreenfieldPQC.Cryptography
                 byte[] publicKey = new byte[str.length_public_key];
                 byte[] privateKey = new byte[str.length_secret_key];
                 if (LibOqsInterop.OQS_KEM_keypair(kem, publicKey, privateKey) != 0)
-                    throw new CryptographicException("Kyber keypair generation failed.");
+                    throw new CryptographicException("Keypair generation failed.");
                 return (publicKey, privateKey);
             }
             finally
@@ -170,12 +165,12 @@ namespace GreenfieldPQC.Cryptography
             }
         }
 
-        public (byte[] SharedSecret, byte[] Ciphertext) EncapsulateSync(byte[] publicKey)
+        public (byte[] SharedSecret, byte[] Ciphertext) Encapsulate(byte[] publicKey)
         {
             if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
             IntPtr kem = LibOqsInterop.OQS_KEM_new(_algName);
             if (kem == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Kyber KEM for {_algName}.");
+                throw new CryptographicException($"Failed to create KEM for {_algName}.");
 
             try
             {
@@ -186,7 +181,7 @@ namespace GreenfieldPQC.Cryptography
                 byte[] ciphertext = new byte[str.length_ciphertext];
                 byte[] sharedSecret = new byte[str.length_shared_secret];
                 if (LibOqsInterop.OQS_KEM_encaps(kem, ciphertext, sharedSecret, publicKey) != 0)
-                    throw new CryptographicException("Kyber encapsulation failed.");
+                    throw new CryptographicException("Encapsulation failed.");
                 return (sharedSecret, ciphertext);
             }
             finally
@@ -194,15 +189,14 @@ namespace GreenfieldPQC.Cryptography
                 LibOqsInterop.OQS_KEM_free(kem);
             }
         }
-        public Task<byte[]> Decapsulate(byte[] ciphertext, byte[] privateKey) => Task.FromResult(DecapsulateSync(ciphertext, privateKey));
 
-        public byte[] DecapsulateSync(byte[] ciphertext, byte[] privateKey)
+        public byte[] Decapsulate(byte[] ciphertext, byte[] privateKey)
         {
             if (ciphertext == null) throw new ArgumentNullException(nameof(ciphertext));
             if (privateKey == null) throw new ArgumentNullException(nameof(privateKey));
             IntPtr kem = LibOqsInterop.OQS_KEM_new(_algName);
             if (kem == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Kyber KEM for {_algName}.");
+                throw new CryptographicException($"Failed to create KEM for {_algName}.");
 
             try
             {
@@ -212,7 +206,7 @@ namespace GreenfieldPQC.Cryptography
 
                 byte[] sharedSecret = new byte[str.length_shared_secret];
                 if (LibOqsInterop.OQS_KEM_decaps(kem, sharedSecret, ciphertext, privateKey) != 0)
-                    throw new CryptographicException("Kyber decapsulation failed.");
+                    throw new CryptographicException("Decapsulation failed.");
                 return sharedSecret;
             }
             finally
@@ -241,20 +235,24 @@ namespace GreenfieldPQC.Cryptography
         public Dilithium(DilithiumParameters parameters)
         {
             _parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
-            _algName = $"Dilithium{_parameters.SecurityLevel}";
+            // Updated to use standardized ML-DSA for future-proofing (Dilithium deprecated in liboqs)
+            string suffix = _parameters.SecurityLevel switch
+            {
+                2 => "44",
+                3 => "65",
+                5 => "87",
+                _ => throw new ArgumentOutOfRangeException(nameof(parameters.SecurityLevel), "Unsupported security level. Use 2, 3, or 5.")
+            };
+            _algName = $"ML-DSA-{suffix}";
         }
 
-        public string AlgorithmName => $"Dilithium-{_parameters.SecurityLevel}";
+        public string AlgorithmName => _algName;
 
-        public Task<byte[]> Sign(byte[] message, byte[] privateKey) => Task.FromResult(SignSync(message, privateKey));
-
-        public Task<bool> Verify(byte[] message, byte[] signature, byte[] publicKey) => Task.FromResult(VerifySync(message, signature, publicKey));
-
-        public (byte[] PublicKey, byte[] PrivateKey) GenerateKeyPairSync()
+        public (byte[] PublicKey, byte[] PrivateKey) GenerateKeyPair()
         {
             IntPtr sig = LibOqsInterop.OQS_SIG_new(_algName);
             if (sig == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Dilithium SIG for {_algName}.");
+                throw new CryptographicException($"Failed to create SIG for {_algName}.");
 
             try
             {
@@ -265,7 +263,7 @@ namespace GreenfieldPQC.Cryptography
                 byte[] publicKey = new byte[str.length_public_key];
                 byte[] privateKey = new byte[str.length_secret_key];
                 if (LibOqsInterop.OQS_SIG_keypair(sig, publicKey, privateKey) != 0)
-                    throw new CryptographicException("Dilithium keypair generation failed.");
+                    throw new CryptographicException("Keypair generation failed.");
                 return (publicKey, privateKey);
             }
             finally
@@ -274,13 +272,13 @@ namespace GreenfieldPQC.Cryptography
             }
         }
 
-        public byte[] SignSync(byte[] message, byte[] privateKey)
+        public byte[] Sign(byte[] message, byte[] privateKey)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (privateKey == null) throw new ArgumentNullException(nameof(privateKey));
             IntPtr sig = LibOqsInterop.OQS_SIG_new(_algName);
             if (sig == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Dilithium SIG for {_algName}.");
+                throw new CryptographicException($"Failed to create SIG for {_algName}.");
 
             try
             {
@@ -291,7 +289,7 @@ namespace GreenfieldPQC.Cryptography
                 byte[] signature = new byte[str.length_signature];
                 ulong sigLen = str.length_signature;
                 if (LibOqsInterop.OQS_SIG_sign(sig, signature, ref sigLen, message, (ulong)message.Length, privateKey) != 0)
-                    throw new CryptographicException("Dilithium signing failed.");
+                    throw new CryptographicException("Signing failed.");
                 if (sigLen != str.length_signature)
                 {
                     Array.Resize(ref signature, (int)sigLen);
@@ -304,14 +302,14 @@ namespace GreenfieldPQC.Cryptography
             }
         }
 
-        public bool VerifySync(byte[] message, byte[] signature, byte[] publicKey)
+        public bool Verify(byte[] message, byte[] signature, byte[] publicKey)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (signature == null) throw new ArgumentNullException(nameof(signature));
             if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
             IntPtr sig = LibOqsInterop.OQS_SIG_new(_algName);
             if (sig == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Dilithium SIG for {_algName}.");
+                throw new CryptographicException($"Failed to create SIG for {_algName}.");
 
             try
             {
@@ -327,7 +325,7 @@ namespace GreenfieldPQC.Cryptography
         {
             IntPtr sig = LibOqsInterop.OQS_SIG_new(_algName);
             if (sig == IntPtr.Zero)
-                throw new CryptographicException($"Failed to create Dilithium SIG for {_algName}.");
+                throw new CryptographicException($"Failed to create SIG for {_algName}.");
 
             try
             {

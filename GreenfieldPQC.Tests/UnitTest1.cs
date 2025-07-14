@@ -408,12 +408,12 @@ namespace GreenfieldPQC.Tests
         }
 
         [Fact]
-        public async Task GenerateKeyPair_EncapsulateDecapsulate_RoundTrip()
+        public void GenerateKeyPair_EncapsulateDecapsulate_RoundTrip()
         {
             using var kyber = new Kyber(new KyberParameters(512));
-            var (publicKey, privateKey) = kyber.GenerateKeyPairSync();
-            var (sharedSecret1, ciphertext) = kyber.EncapsulateSync(publicKey);
-            byte[] sharedSecret2 = await kyber.Decapsulate(ciphertext, privateKey);
+            var (publicKey, privateKey) = kyber.GenerateKeyPair();
+            var (sharedSecret1, ciphertext) = kyber.Encapsulate(publicKey);
+            byte[] sharedSecret2 = kyber.Decapsulate(ciphertext, privateKey);
 
             Assert.NotNull(publicKey);
             Assert.NotNull(privateKey);
@@ -445,14 +445,14 @@ namespace GreenfieldPQC.Tests
         }
 
         [Fact]
-        public async Task GenerateKeyPair_SignVerify_ValidSignature()
+        public void GenerateKeyPair_SignVerify_ValidSignature()
         {
             using var dilithium = new Dilithium(new DilithiumParameters(2));
-            var (publicKey, privateKey) = dilithium.GenerateKeyPairSync();
+            var (publicKey, privateKey) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
-            byte[] signature = await dilithium.Sign(message, privateKey);
+            byte[] signature = dilithium.Sign(message, privateKey);
 
-            bool isValid = await dilithium.Verify(message, signature, publicKey);
+            bool isValid = dilithium.Verify(message, signature, publicKey);
 
             Assert.True(isValid);
             Assert.NotNull(publicKey);
@@ -462,18 +462,18 @@ namespace GreenfieldPQC.Tests
         }
 
         [Fact]
-        public void VerifySync_InvalidSignature_ReturnsFalse()
+        public void Verify_InvalidSignature_ReturnsFalse()
         {
             using var dilithium = new Dilithium(new DilithiumParameters(2));
-            var (publicKey, privateKey) = dilithium.GenerateKeyPairSync();
+            var (publicKey, privateKey) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
             byte[] signature = new byte[dilithium.GetSignatureLength()];
             RandomNumberGenerator.Fill(signature); // Invalid signature
 
-            bool isValid = dilithium.VerifySync(message, signature, publicKey);
+            bool isValid = dilithium.Verify(message, signature, publicKey);
 
             Assert.False(isValid);
-            Log("Dilithium_VerifySync_InvalidSignature_ReturnsFalse passed");
+            Log("Dilithium_Verify_InvalidSignature_ReturnsFalse passed");
         }
 
         [Fact]
@@ -513,7 +513,7 @@ namespace GreenfieldPQC.Tests
         {
             using var kyber = new Kyber(new KyberParameters(512));
             Assert.IsType<Kyber>(kyber);
-            Assert.Equal("Kyber-512", kyber.AlgorithmName);
+            Assert.Equal("ML-KEM-512", kyber.AlgorithmName);
             Log("CryptoFactory_CreateKyber_ReturnsKyber passed");
         }
 
@@ -522,7 +522,7 @@ namespace GreenfieldPQC.Tests
         {
             using var dilithium = new Dilithium(new DilithiumParameters(2));
             Assert.IsType<Dilithium>(dilithium);
-            Assert.Equal("Dilithium-2", dilithium.AlgorithmName);
+            Assert.Equal("ML-DSA-44", dilithium.AlgorithmName);
             Log("CryptoFactory_CreateDilithium_ReturnsDilithium passed");
         }
 
