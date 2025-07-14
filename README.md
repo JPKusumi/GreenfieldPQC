@@ -6,7 +6,7 @@
 GreenfieldPQC is a slim, post-quantum-ready cryptography library focused on essential primitives for symmetric encryption, hashing, and PQC signatures/KEMs. It includes Kusumi512 (novel ARX stream cipher), Kusumi512Poly1305 (AEAD), SHA256/SHA512 (Microsoft wrappers), Kyber (KEM), and Dilithium (signatures) via P/Invoke to oqs.dll. Designed for efficiency in .NET, with constant-time ops and low memory.
 
 **Key Features:**
-- **PQC Primitives**: Kyber/Dilithium for quantum-safe KEM/signing.  
+- **PQC Primitives**: Kyber/Dilithium for quantum-safe KEM/signing (using ML-KEM/ML-DSA under the hood for standardization).  
 - **Symmetric**: Kusumi512 for high-speed 512-bit encryption.  
 - **Hashing**: Simple wrappers for SHA256/512.  
 - **API Simplicity**: Factory pattern for instantiation; synchronous and asynchronous methods.  
@@ -36,8 +36,8 @@ ISymmetricCipher cipher = CryptoFactory.CreateKusumi512(key, nonce); // Use inte
 
 string plaintext = "Hello, PQC!";
 byte[] plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
-byte[] ciphertext = cipher.EncryptSync(plaintextBytes);
-byte[] decrypted = cipher.DecryptSync(ciphertext);
+byte[] ciphertext = cipher.Encrypt(plaintextBytes);
+byte[] decrypted = cipher.Decrypt(ciphertext);
 
 Console.WriteLine(Encoding.UTF8.GetString(decrypted)); // "Hello, PQC!"
 ```
@@ -70,32 +70,32 @@ Supported Algorithms (Enum: `CipherAlgorithm`): Kusumi512, Kusumi512Poly1305, Ky
 Interface for symmetric ops (useful for mocking/testing).
 
 - **AlgorithmName**: String property (e.g., "Kusumi512").
-- **EncryptSync(byte[] plaintext)**: Returns ciphertext (with tag for AEAD).
-- **DecryptSync(byte[] ciphertext)**: Returns plaintext (verifies tag for AEAD).
-- **Encrypt/Decrypt (async)**: Task-wrapped.
-- **EncryptInPlaceSync(Span<byte> io)**: In-place (not for AEAD).
-- **DecryptInPlaceSync(Span<byte> io)**: Symmetric to above.
-- **EncryptInPlace/DecryptInPlace (async)**: Memory<byte> versions.
-- **EncryptStreamSync(Stream in, Stream out, int buf=4096, Func<long, byte[]>? nonceGen=null)**: Stream encryption.
-- **DecryptStreamSync**: Stream decryption.
-- **EncryptStream/DecryptStream (async)**: With progress, cancellation, async nonceGen.
+- **Encrypt(byte[] plaintext)**: Returns ciphertext (with tag for AEAD).
+- **Decrypt(byte[] ciphertext)**: Returns plaintext (verifies tag for AEAD).
+- **EncryptAsync/DecryptAsync**: Task-wrapped with cancellation.
+- **EncryptInPlace(Span<byte> io)**: In-place (not for AEAD).
+- **DecryptInPlace(Span<byte> io)**: Symmetric to above.
+- **EncryptInPlaceAsync/DecryptInPlaceAsync**: Memory<byte> versions with cancellation.
+- **EncryptStream(Stream in, Stream out, int buf=4096, Func<long, byte[]>? nonceGen=null)**: Stream encryption.
+- **DecryptStream**: Stream decryption.
+- **EncryptStreamAsync/DecryptStreamAsync**: With progress, cancellation, async nonceGen.
 
 For AEAD: Ciphertext appends 128-bit tag; decryption throws on invalid.
 
 ### Asymmetric cryptography (Kyber and Dilithium)
-Kyber/Dilithium via P/Invoke to oqs.dll.
+Kyber/Dilithium via P/Invoke to oqs.dll (using ML-KEM/ML-DSA internally).
 
 #### Kyber (KEM)
 - Constructor: `new Kyber(new KyberParameters(level))` (512/768/1024).
-- **GenerateKeyPairSync()**: (publicKey, privateKey).
-- **EncapsulateSync(byte[] publicKey)**: (sharedSecret, ciphertext).
-- **DecapsulateSync(byte[] ciphertext, byte[] privateKey)**: sharedSecret.
+- **GenerateKeyPair()**: (publicKey, privateKey).
+- **Encapsulate(byte[] publicKey)**: (sharedSecret, ciphertext).
+- **Decapsulate(byte[] ciphertext, byte[] privateKey)**: sharedSecret.
 
 #### Dilithium (Signatures)
 - Constructor: `new Dilithium(new DilithiumParameters(level))` (2/3/5).
-- **GenerateKeyPairSync()**: (publicKey, privateKey).
-- **SignSync(byte[] message, byte[] privateKey)**: signature.
-- **VerifySync(byte[] message, byte[] signature, byte[] publicKey)**: bool.
+- **GenerateKeyPair()**: (publicKey, privateKey).
+- **Sign(byte[] message, byte[] privateKey)**: signature.
+- **Verify(byte[] message, byte[] signature, byte[] publicKey)**: bool.
 - **GetSignatureLength()**: Expected sig size.
 
 Parameters in `GreenfieldPQC.Cryptography.Parameters`.
@@ -109,18 +109,19 @@ byte[] data = Encoding.UTF8.GetBytes("Hash me");
 
 // Static (one-off, thread-safe)  
 byte[] hash = CryptoFactory.ComputeSHA256(data); // or ComputeSHA256(stream)  
-byte[] sha512 = CryptoFactory.ComputeSHA512(data);  
+byte[] sha512 = CryptoFactory.ComputeSHA512(data);  // or ComputeSHA512(stream)  
 
 // Instance (reusable per-thread)  
 using SHA256 sha = SHA256.Create();  
 byte[] hash = sha.ComputeHash(data); // or sha.ComputeHash(stream)  
+
 ```
 
 ### AEAD Encryption
 ```csharp
 ISymmetricCipher cipher = CryptoFactory.CreateKusumi512Poly1305(key, nonce);
-byte[] ciphertextWithTag = cipher.EncryptSync(plaintextBytes);
-byte[] decrypted = cipher.DecryptSync(ciphertextWithTag);
+byte[] ciphertextWithTag = cipher.Encrypt(plaintextBytes);
+byte[] decrypted = cipher.Decrypt(ciphertextWithTag);
 ```
 
 ### Stream Encryption
@@ -130,24 +131,24 @@ using var output = File.Create("enc.dat");
 ISymmetricCipher cipher = CryptoFactory.CreateKusumi512(key, nonce);
 var progress = new Progress<double>(p => Console.WriteLine($"{p:P}"));
 Func<long, Task<byte[]>> nonceGen = async bytes => CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
-await cipher.EncryptStream(input, output, progress: progress, nonceGenerator: nonceGen);
+await cipher.EncryptStreamAsync(input, output, progress: progress, nonceGenerator: nonceGen);
 ```
 
 ### Kyber KEM
 ```csharp
 var kyber = new Kyber(new KyberParameters(1024));
-var (pk, sk) = kyber.GenerateKeyPairSync();
-var (ssSender, ct) = kyber.EncapsulateSync(pk);
-byte[] ssReceiver = kyber.DecapsulateSync(ct, sk);
+var (pk, sk) = kyber.GenerateKeyPair();
+var (ssSender, ct) = kyber.Encapsulate(pk);
+byte[] ssReceiver = kyber.Decapsulate(ct, sk);
 // Verify: CryptographicOperations.FixedTimeEquals(ssSender, ssReceiver)
 ```
 
 ### Dilithium Signing
 ```csharp
 var dilithium = new Dilithium(new DilithiumParameters(5));
-var (pubKey, privKey) = dilithium.GenerateKeyPairSync();
-byte[] sig = dilithium.SignSync(plaintextBytes, privKey);
-bool verified = dilithium.VerifySync(plaintextBytes, sig, pubKey);
+var (pubKey, privKey) = dilithium.GenerateKeyPair();
+byte[] sig = dilithium.Sign(plaintextBytes, privKey);
+bool verified = dilithium.Verify(plaintextBytes, sig, pubKey);
 ```
 
 ## Security Considerations

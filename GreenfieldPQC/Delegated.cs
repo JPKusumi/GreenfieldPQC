@@ -25,7 +25,7 @@ namespace GreenfieldPQC.Cryptography
             _kusumi512 = new Kusumi512(key, nonce);
         }
 
-        public override async Task<byte[]> Encrypt(byte[] plaintext, CancellationToken cancellationToken = default)
+        public override async Task<byte[]> EncryptAsync(byte[] plaintext, CancellationToken cancellationToken = default)
         {
             if (plaintext == null) throw new ArgumentNullException(nameof(plaintext));
             byte[] ciphertext = _kusumi512.RunCipher(plaintext, startCounter: 1);
@@ -37,7 +37,7 @@ namespace GreenfieldPQC.Cryptography
             return await Task.FromResult(result).ConfigureAwait(false);
         }
 
-        public override byte[] EncryptSync(byte[] plaintext)
+        public override byte[] Encrypt(byte[] plaintext)
         {
             if (plaintext == null) throw new ArgumentNullException(nameof(plaintext));
             byte[] ciphertext = _kusumi512.RunCipher(plaintext, startCounter: 1);
@@ -49,7 +49,7 @@ namespace GreenfieldPQC.Cryptography
             return result;
         }
 
-        public override async Task<byte[]> Decrypt(byte[] ciphertext, CancellationToken cancellationToken = default)
+        public override async Task<byte[]> DecryptAsync(byte[] ciphertext, CancellationToken cancellationToken = default)
         {
             if (ciphertext == null) throw new ArgumentNullException(nameof(ciphertext));
             if (ciphertext.Length < TagLength)
@@ -65,7 +65,7 @@ namespace GreenfieldPQC.Cryptography
             return await Task.FromResult(_kusumi512.RunCipher(actualCiphertext, startCounter: 1)).ConfigureAwait(false);
         }
 
-        public override byte[] DecryptSync(byte[] ciphertext)
+        public override byte[] Decrypt(byte[] ciphertext)
         {
             if (ciphertext == null) throw new ArgumentNullException(nameof(ciphertext));
             if (ciphertext.Length < TagLength)
@@ -81,27 +81,27 @@ namespace GreenfieldPQC.Cryptography
             return _kusumi512.RunCipher(actualCiphertext, startCounter: 1);
         }
 
-        public override Task EncryptInPlace(Memory<byte> inputOutput, CancellationToken cancellationToken = default)
+        public override Task EncryptInPlaceAsync(Memory<byte> inputOutput, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException("Kusumi512-Poly1305 does not support in-place transformation.");
         }
 
-        public override void EncryptInPlaceSync(Span<byte> inputOutput)
+        public override void EncryptInPlace(Span<byte> inputOutput)
         {
             throw new NotSupportedException("Kusumi512-Poly1305 does not support in-place transformation.");
         }
 
-        public override Task DecryptInPlace(Memory<byte> inputOutput, CancellationToken cancellationToken = default)
+        public override Task DecryptInPlaceAsync(Memory<byte> inputOutput, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException("Kusumi512-Poly1305 does not support in-place transformation.");
         }
 
-        public override void DecryptInPlaceSync(Span<byte> inputOutput)
+        public override void DecryptInPlace(Span<byte> inputOutput)
         {
             throw new NotSupportedException("Kusumi512-Poly1305 does not support in-place transformation.");
         }
 
-        public override async Task EncryptStream(Stream input, Stream output, int bufferSize = 4096, IProgress<double>? progress = null, IProgress<int>? segmentProgress = null, Func<long, Task<byte[]>>? nonceGenerator = null, CancellationToken cancellationToken = default)
+        public override async Task EncryptStreamAsync(Stream input, Stream output, int bufferSize = 4096, IProgress<double>? progress = null, IProgress<int>? segmentProgress = null, Func<long, Task<byte[]>>? nonceGenerator = null, CancellationToken cancellationToken = default)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (output == null) throw new ArgumentNullException(nameof(output));
@@ -135,7 +135,7 @@ namespace GreenfieldPQC.Cryptography
                             UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
                             segmentProgress?.Report(++segmentCount);
                         }
-                        byte[] ciphertext = await Encrypt(segmentBuffer, cancellationToken).ConfigureAwait(false);
+                        byte[] ciphertext = await EncryptAsync(segmentBuffer, cancellationToken).ConfigureAwait(false);
                         await output.WriteAsync(ciphertext, 0, ciphertext.Length, cancellationToken).ConfigureAwait(false);
                         bytesInBuffer = 0;
                     }
@@ -151,12 +151,12 @@ namespace GreenfieldPQC.Cryptography
                     UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
                     segmentProgress?.Report(++segmentCount);
                 }
-                byte[] ciphertext = await Encrypt(finalSegment, cancellationToken).ConfigureAwait(false);
+                byte[] ciphertext = await EncryptAsync(finalSegment, cancellationToken).ConfigureAwait(false);
                 await output.WriteAsync(ciphertext, 0, ciphertext.Length, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        public override void EncryptStreamSync(Stream input, Stream output, int bufferSize = 4096, Func<long, byte[]>? nonceGenerator = null)
+        public override void EncryptStream(Stream input, Stream output, int bufferSize = 4096, Func<long, byte[]>? nonceGenerator = null)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (output == null) throw new ArgumentNullException(nameof(output));
@@ -185,7 +185,7 @@ namespace GreenfieldPQC.Cryptography
                         {
                             UpdateNonce(nonceGenerator(bytesProcessed));
                         }
-                        byte[] ciphertext = EncryptSync(segmentBuffer);
+                        byte[] ciphertext = Encrypt(segmentBuffer);
                         output.Write(ciphertext, 0, ciphertext.Length);
                         bytesInBuffer = 0;
                     }
@@ -200,12 +200,12 @@ namespace GreenfieldPQC.Cryptography
                 {
                     UpdateNonce(nonceGenerator(bytesProcessed));
                 }
-                byte[] ciphertext = EncryptSync(finalSegment);
+                byte[] ciphertext = Encrypt(finalSegment);
                 output.Write(ciphertext, 0, ciphertext.Length);
             }
         }
 
-        public override async Task DecryptStream(Stream input, Stream output, int bufferSize = 4096, IProgress<double>? progress = null, IProgress<int>? segmentProgress = null, Func<long, Task<byte[]>>? nonceGenerator = null, CancellationToken cancellationToken = default)
+        public override async Task DecryptStreamAsync(Stream input, Stream output, int bufferSize = 4096, IProgress<double>? progress = null, IProgress<int>? segmentProgress = null, Func<long, Task<byte[]>>? nonceGenerator = null, CancellationToken cancellationToken = default)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (output == null) throw new ArgumentNullException(nameof(output));
@@ -241,7 +241,7 @@ namespace GreenfieldPQC.Cryptography
                         }
                         byte[] segment = new byte[bytesPerSegment + TagLength];
                         Array.Copy(segmentBuffer, 0, segment, 0, bytesPerSegment + TagLength);
-                        byte[] plaintext = await Decrypt(segment, cancellationToken).ConfigureAwait(false);
+                        byte[] plaintext = await DecryptAsync(segment, cancellationToken).ConfigureAwait(false);
                         await output.WriteAsync(plaintext, 0, plaintext.Length, cancellationToken).ConfigureAwait(false);
                         bytesInBuffer = 0;
                     }
@@ -259,12 +259,12 @@ namespace GreenfieldPQC.Cryptography
                     UpdateNonce(await nonceGenerator(bytesProcessed - bytesInBuffer).ConfigureAwait(false));
                     segmentProgress?.Report(++segmentCount);
                 }
-                byte[] plaintext = await Decrypt(finalSegment, cancellationToken).ConfigureAwait(false);
+                byte[] plaintext = await DecryptAsync(finalSegment, cancellationToken).ConfigureAwait(false);
                 await output.WriteAsync(plaintext, 0, plaintext.Length, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        public override void DecryptStreamSync(Stream input, Stream output, int bufferSize = 4096, Func<long, byte[]>? nonceGenerator = null)
+        public override void DecryptStream(Stream input, Stream output, int bufferSize = 4096, Func<long, byte[]>? nonceGenerator = null)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (output == null) throw new ArgumentNullException(nameof(output));
@@ -295,7 +295,7 @@ namespace GreenfieldPQC.Cryptography
                         }
                         byte[] segment = new byte[bytesPerSegment + TagLength];
                         Array.Copy(segmentBuffer, 0, segment, 0, bytesPerSegment + TagLength);
-                        byte[] plaintext = DecryptSync(segment);
+                        byte[] plaintext = Decrypt(segment);
                         output.Write(plaintext, 0, plaintext.Length);
                         bytesInBuffer = 0;
                     }
@@ -312,7 +312,7 @@ namespace GreenfieldPQC.Cryptography
                 {
                     UpdateNonce(nonceGenerator(bytesProcessed - bytesInBuffer));
                 }
-                byte[] plaintext = DecryptSync(finalSegment);
+                byte[] plaintext = Decrypt(finalSegment);
                 output.Write(plaintext, 0, plaintext.Length);
             }
         }

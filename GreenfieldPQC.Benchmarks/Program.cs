@@ -77,7 +77,7 @@ namespace GreenfieldPQC.Benchmarks
             string secondNonceReadyString = secondNonceSourceString.Replace(":", "");
             byte[] secondNonce = Convert.FromHexString(secondNonceReadyString);
             var cipher = CryptoFactory.CreateKusumi512(secondKey, secondNonce);
-            byte[] third = cipher.EncryptSync(second);
+            byte[] third = cipher.Encrypt(second);
             Console.WriteLine("second length: " + second.Length);
             string fourth = ByteArrayToHexString(third);
             Console.WriteLine("third length: " + third.Length);

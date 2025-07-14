@@ -33,9 +33,9 @@ namespace GreenfieldPQC.Tests
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] plaintext = Encoding.UTF8.GetBytes("Hello, Kusumi-512!");
 
-            byte[] ciphertext = await cipher.Encrypt(plaintext);
+            byte[] ciphertext = await cipher.EncryptAsync(plaintext);
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
-            byte[] decrypted = await decryptCipher.Decrypt(ciphertext);
+            byte[] decrypted = await decryptCipher.DecryptAsync(ciphertext);
 
             Assert.Equal(plaintext, decrypted);
             Assert.NotSame(plaintext, ciphertext);
@@ -50,9 +50,9 @@ namespace GreenfieldPQC.Tests
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] plaintext = Encoding.UTF8.GetBytes("Hello, Kusumi-512!");
 
-            byte[] ciphertext = await cipher.Encrypt(plaintext);
+            byte[] ciphertext = await cipher.EncryptAsync(plaintext);
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
-            byte[] decrypted = await decryptCipher.Decrypt(ciphertext);
+            byte[] decrypted = await decryptCipher.DecryptAsync(ciphertext);
 
             Assert.Equal(plaintext, decrypted);
             Assert.NotSame(plaintext, ciphertext);
@@ -66,7 +66,7 @@ namespace GreenfieldPQC.Tests
             byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
 
-            await Assert.ThrowsAsync<ArgumentNullException>(() => cipher.Encrypt(null));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => cipher.EncryptAsync(null));
             Log("Kusumi512_Encrypt_NullInput_Throws passed");
         }
 
@@ -89,9 +89,9 @@ namespace GreenfieldPQC.Tests
             byte[] data = Encoding.UTF8.GetBytes("Hello, Kusumi-512!");
             byte[] buffer = data.ToArray();
 
-            await cipher.EncryptInPlace(buffer.AsMemory());
+            await cipher.EncryptInPlaceAsync(buffer.AsMemory());
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
-            await decryptCipher.DecryptInPlace(buffer.AsMemory());
+            await decryptCipher.DecryptInPlaceAsync(buffer.AsMemory());
 
             Assert.Equal(data, buffer);
             Log("Kusumi512_EncryptInPlace_RoundTrip passed");
@@ -106,9 +106,9 @@ namespace GreenfieldPQC.Tests
             byte[] data = Encoding.UTF8.GetBytes("Hello, Kusumi-512!");
             byte[] buffer = data.ToArray();
 
-            cipher.EncryptInPlaceSync(buffer.AsSpan());
+            cipher.EncryptInPlace(buffer.AsSpan());
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
-            decryptCipher.DecryptInPlaceSync(buffer.AsSpan());
+            decryptCipher.DecryptInPlace(buffer.AsSpan());
 
             Assert.Equal(data, buffer);
             Log("Kusumi512_EncryptInPlaceSync_RoundTrip passed");
@@ -126,10 +126,10 @@ namespace GreenfieldPQC.Tests
             using var input = new MemoryStream(data);
             using var encrypted = new MemoryStream();
             using var decrypted = new MemoryStream();
-            await cipher.EncryptStream(input, encrypted, 4096);
+            await cipher.EncryptStreamAsync(input, encrypted, 4096);
             encrypted.Position = 0;
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
-            await decryptCipher.DecryptStream(encrypted, decrypted, 4096);
+            await decryptCipher.DecryptStreamAsync(encrypted, decrypted, 4096);
 
             Assert.Equal(data, decrypted.ToArray());
             Log("Kusumi512_EncryptStream_RoundTrip passed");
@@ -147,10 +147,10 @@ namespace GreenfieldPQC.Tests
             using var input = new MemoryStream(data);
             using var encrypted = new MemoryStream();
             using var decrypted = new MemoryStream();
-            cipher.EncryptStreamSync(input, encrypted, 4096);
+            cipher.EncryptStream(input, encrypted, 4096);
             encrypted.Position = 0;
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
-            decryptCipher.DecryptStreamSync(encrypted, decrypted, 4096);
+            decryptCipher.DecryptStream(encrypted, decrypted, 4096);
 
             Assert.Equal(data, decrypted.ToArray());
             Log("Kusumi512_EncryptStreamSync_RoundTrip passed");
@@ -167,7 +167,7 @@ namespace GreenfieldPQC.Tests
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            await Assert.ThrowsAsync<TaskCanceledException>(() => cipher.EncryptStream(input, output, 4096, null, null, null, cts.Token));
+            await Assert.ThrowsAsync<TaskCanceledException>(() => cipher.EncryptStreamAsync(input, output, 4096, null, null, null, cts.Token));
             Log("Kusumi512_EncryptStream_Cancel_Throws passed");
         }
 
@@ -182,8 +182,8 @@ namespace GreenfieldPQC.Tests
             using var cipher1 = CryptoFactory.CreateKusumi512(key, nonce1);
             using var cipher2 = CryptoFactory.CreateKusumi512(key, nonce2);
 
-            cipher1.EncryptInPlaceSync(buffer1.AsSpan());
-            cipher2.EncryptInPlaceSync(buffer2.AsSpan());
+            cipher1.EncryptInPlace(buffer1.AsSpan());
+            cipher2.EncryptInPlace(buffer2.AsSpan());
 
             Assert.NotEqual(buffer1, buffer2);
             Log("Kusumi512_EncryptInPlace_Word24_AffectsKeystream passed");
@@ -196,7 +196,7 @@ namespace GreenfieldPQC.Tests
             byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
 
-            await Assert.ThrowsAsync<ArgumentNullException>(() => cipher.EncryptInPlace(null));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => cipher.EncryptInPlaceAsync(null));
             Log("Kusumi512_EncryptInPlace_NullInput_Throws passed");
         }
 
@@ -208,7 +208,7 @@ namespace GreenfieldPQC.Tests
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
             using var output = new MemoryStream();
 
-            Assert.Throws<ArgumentNullException>(() => cipher.EncryptStreamSync(null, output));
+            Assert.Throws<ArgumentNullException>(() => cipher.EncryptStream(null, output));
             Log("Kusumi512_EncryptStream_NullInput_Throws passed");
         }
 
@@ -225,7 +225,7 @@ namespace GreenfieldPQC.Tests
             byte[] plaintext = Encoding.UTF8.GetBytes("No man is an island, entire of itself; every man is a piece of the continent, a part of the main. If a clod be washed away by the sea, Europe is the less, as well as if a promontory were, as well as if a manor of thy friend's or of thine own were: any man's death diminishes me, because I am involved in mankind, and therefore never send to know for whom the bell tolls; it tolls for thee.");
             using var cipher = new Kusumi512(key, nonce);
 
-            byte[] ciphertext1 = cipher.EncryptSync(plaintext);
+            byte[] ciphertext1 = cipher.Encrypt(plaintext);
             try
             {
                 File.WriteAllText(Path.Combine(Path.GetTempPath(), "kusumi512_actual_ciphertext.txt"), Convert.ToHexString(ciphertext1).ToLower());
@@ -236,14 +236,14 @@ namespace GreenfieldPQC.Tests
                 Log($"Kusumi512 Actual Ciphertext File Write Error: {ex.Message}");
             }
             using var decryptCipher1 = new Kusumi512(key, nonce);
-            byte[] decrypted1 = decryptCipher1.DecryptSync(ciphertext1);
+            byte[] decrypted1 = decryptCipher1.Decrypt(ciphertext1);
             Assert.Equal(plaintext, decrypted1);
             Assert.Equal(expectedCiphertext, ciphertext1);
 
             using var cipher2 = new Kusumi512(key, nonce);
-            byte[] ciphertext2 = cipher2.EncryptSync(plaintext);
+            byte[] ciphertext2 = cipher2.Encrypt(plaintext);
             using var decryptCipher2 = new Kusumi512(key, nonce);
-            byte[] decrypted2 = decryptCipher2.DecryptSync(ciphertext2);
+            byte[] decrypted2 = decryptCipher2.Decrypt(ciphertext2);
             Assert.Equal(plaintext, decrypted2);
             Assert.Equal(expectedCiphertext, ciphertext2);
 

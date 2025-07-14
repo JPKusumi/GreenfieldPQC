@@ -54,7 +54,7 @@ namespace GreenfieldPQC.Benchmarks
             try
             {
                 var input = data.AsSpan(0, DataSize).ToArray();
-                kusumi512.EncryptSync(input);
+                kusumi512.Encrypt(input);
             }
             catch (Exception ex)
             {
@@ -69,7 +69,7 @@ namespace GreenfieldPQC.Benchmarks
             try
             {
                 var buffer = data.AsSpan(0, DataSize).ToArray();
-                kusumi512.EncryptInPlaceSync(buffer.AsSpan());
+                kusumi512.EncryptInPlace(buffer.AsSpan());
             }
             catch (Exception ex)
             {
@@ -85,7 +85,7 @@ namespace GreenfieldPQC.Benchmarks
             {
                 using var input = new MemoryStream(data, 0, DataSize);
                 using var output = new MemoryStream();
-                kusumi512.EncryptStreamSync(input, output, 4096);
+                kusumi512.EncryptStream(input, output, 4096);
             }
             catch (Exception ex)
             {

@@ -55,9 +55,9 @@ namespace GreenfieldPQC.Tests
             byte[] plaintext = new byte[4096];
             RandomNumberGenerator.Fill(plaintext);
 
-            byte[] ciphertext = await cipher.Encrypt(plaintext);
+            byte[] ciphertext = await cipher.EncryptAsync(plaintext);
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce); // Reset counter
-            byte[] decrypted = await decryptCipher.Decrypt(ciphertext);
+            byte[] decrypted = await decryptCipher.DecryptAsync(ciphertext);
 
             Assert.Equal(plaintext.Length, decrypted.Length);
             Assert.Equal(plaintext, decrypted);
@@ -74,9 +74,9 @@ namespace GreenfieldPQC.Tests
             byte[] plaintext = new byte[4096];
             RandomNumberGenerator.Fill(plaintext);
 
-            byte[] ciphertext = cipher.EncryptSync(plaintext);
+            byte[] ciphertext = cipher.Encrypt(plaintext);
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce); // Reset counter
-            byte[] decrypted = decryptCipher.DecryptSync(ciphertext);
+            byte[] decrypted = decryptCipher.Decrypt(ciphertext);
 
             Assert.Equal(plaintext.Length, decrypted.Length);
             Assert.Equal(plaintext, decrypted);
@@ -93,9 +93,9 @@ namespace GreenfieldPQC.Tests
             byte[] plaintext = new byte[4096];
             RandomNumberGenerator.Fill(plaintext);
 
-            byte[] ciphertext = await cipher.Encrypt(plaintext);
+            byte[] ciphertext = await cipher.EncryptAsync(plaintext);
             using var decryptCipher = CryptoFactory.CreateKusumi512Poly1305(key, nonce); // Reset counter
-            byte[] decrypted = await decryptCipher.Decrypt(ciphertext);
+            byte[] decrypted = await decryptCipher.DecryptAsync(ciphertext);
 
             Assert.Equal(plaintext.Length, decrypted.Length);
             Assert.Equal(plaintext, decrypted);
@@ -112,9 +112,9 @@ namespace GreenfieldPQC.Tests
             byte[] plaintext = new byte[4096];
             RandomNumberGenerator.Fill(plaintext);
 
-            byte[] ciphertext = cipher.EncryptSync(plaintext);
+            byte[] ciphertext = cipher.Encrypt(plaintext);
             using var decryptCipher = CryptoFactory.CreateKusumi512Poly1305(key, nonce); // Reset counter
-            byte[] decrypted = decryptCipher.DecryptSync(ciphertext);
+            byte[] decrypted = decryptCipher.Decrypt(ciphertext);
 
             Assert.Equal(plaintext.Length, decrypted.Length);
             Assert.Equal(plaintext, decrypted);
@@ -135,9 +135,9 @@ namespace GreenfieldPQC.Tests
             using var input = new MemoryStream(plaintext);
             using var ciphertextStream = new MemoryStream();
             using var decryptedStream = new MemoryStream();
-            await encryptCipher.EncryptStream(input, ciphertextStream, 1024);
+            await encryptCipher.EncryptStreamAsync(input, ciphertextStream, 1024);
             ciphertextStream.Position = 0;
-            await decryptCipher.DecryptStream(ciphertextStream, decryptedStream, 1024);
+            await decryptCipher.DecryptStreamAsync(ciphertextStream, decryptedStream, 1024);
 
             byte[] decrypted = decryptedStream.ToArray();
             Assert.Equal(plaintext.Length, decrypted.Length);
@@ -158,9 +158,9 @@ namespace GreenfieldPQC.Tests
             using var input = new MemoryStream(plaintext);
             using var ciphertextStream = new MemoryStream();
             using var decryptedStream = new MemoryStream();
-            encryptCipher.EncryptStreamSync(input, ciphertextStream, 1024);
+            encryptCipher.EncryptStream(input, ciphertextStream, 1024);
             ciphertextStream.Position = 0;
-            decryptCipher.DecryptStreamSync(ciphertextStream, decryptedStream, 1024);
+            decryptCipher.DecryptStream(ciphertextStream, decryptedStream, 1024);
 
             byte[] decrypted = decryptedStream.ToArray();
             Assert.Equal(plaintext.Length, decrypted.Length);
@@ -181,9 +181,9 @@ namespace GreenfieldPQC.Tests
             using var input = new MemoryStream(plaintext);
             using var ciphertextStream = new MemoryStream();
             using var decryptedStream = new MemoryStream();
-            await encryptCipher.EncryptStream(input, ciphertextStream, 1024);
+            await encryptCipher.EncryptStreamAsync(input, ciphertextStream, 1024);
             ciphertextStream.Position = 0;
-            await decryptCipher.DecryptStream(ciphertextStream, decryptedStream, 1024);
+            await decryptCipher.DecryptStreamAsync(ciphertextStream, decryptedStream, 1024);
 
             byte[] decrypted = decryptedStream.ToArray();
             Assert.Equal(plaintext.Length, decrypted.Length);
@@ -204,9 +204,9 @@ namespace GreenfieldPQC.Tests
             using var input = new MemoryStream(plaintext);
             using var ciphertextStream = new MemoryStream();
             using var decryptedStream = new MemoryStream();
-            encryptCipher.EncryptStreamSync(input, ciphertextStream, 1024);
+            encryptCipher.EncryptStream(input, ciphertextStream, 1024);
             ciphertextStream.Position = 0;
-            decryptCipher.DecryptStreamSync(ciphertextStream, decryptedStream, 1024);
+            decryptCipher.DecryptStream(ciphertextStream, decryptedStream, 1024);
 
             byte[] decrypted = decryptedStream.ToArray();
             Assert.Equal(plaintext.Length, decrypted.Length);
@@ -225,8 +225,8 @@ namespace GreenfieldPQC.Tests
             RandomNumberGenerator.Fill(data);
             byte[] original = data.ToArray();
 
-            await encryptCipher.EncryptInPlace(data.AsMemory());
-            await decryptCipher.DecryptInPlace(data.AsMemory());
+            await encryptCipher.EncryptInPlaceAsync(data.AsMemory());
+            await decryptCipher.DecryptInPlaceAsync(data.AsMemory());
 
             Assert.Equal(original.Length, data.Length);
             Assert.Equal(original, data);
@@ -244,8 +244,8 @@ namespace GreenfieldPQC.Tests
             RandomNumberGenerator.Fill(data);
             byte[] original = data.ToArray();
 
-            encryptCipher.EncryptInPlaceSync(data.AsSpan());
-            decryptCipher.DecryptInPlaceSync(data.AsSpan());
+            encryptCipher.EncryptInPlace(data.AsSpan());
+            decryptCipher.DecryptInPlace(data.AsSpan());
 
             Assert.Equal(original.Length, data.Length);
             Assert.Equal(original, data);
@@ -260,8 +260,8 @@ namespace GreenfieldPQC.Tests
             using var cipher = CryptoFactory.CreateKusumi512Poly1305(key, nonce);
             byte[] buffer = new byte[4096];
 
-            Assert.Throws<NotSupportedException>(() => cipher.EncryptInPlaceSync(buffer.AsSpan()));
-            Assert.ThrowsAsync<NotSupportedException>(() => cipher.EncryptInPlace(buffer.AsMemory()));
+            Assert.Throws<NotSupportedException>(() => cipher.EncryptInPlace(buffer.AsSpan()));
+            Assert.ThrowsAsync<NotSupportedException>(() => cipher.EncryptInPlaceAsync(buffer.AsMemory()));
             Log("Kusumi512Poly1305_EncryptInPlace_ThrowsNotSupported passed");
         }
 

@@ -1,0 +1,112 @@
+name: Build and Pack NuGet
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]  # Triggers on tags like v1.0.0, but publish is manual
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-natives:
+    strategy:
+      matrix:
+        config:
+          - { os: windows-latest, arch: x64, rid: win-x64, libname: oqs.dll }
+          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Cross-compile ARM on x64 runner
+          - { os: ubuntu-latest, arch: x64, rid: linux-x64, libname: liboqs.so }
+          - { os: ubuntu-latest, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Use Docker for ARM
+          - { os: macos-latest, arch: x64, rid: osx-x64, libname: liboqs.dylib }
+          - { os: macos-14, arch: arm64, rid: osx-arm64, libname: liboqs.dylib }  # Native ARM runner
+
+    runs-on: ${{ matrix.config.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libssl-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install cmake ninja openssl
+
+      - name: Clone liboqs
+        run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
+
+      - name: Setup CMake for cross-compile (Win ARM64)
+        if: matrix.config.rid == 'win-arm64'
+        uses: microsoft/setup-msbuild@v2
+        with:
+          platform: ARM64
+
+      - name: Build liboqs (Windows)
+        if: runner.os == 'Windows'
+        working-directory: liboqs
+        shell: pwsh
+        run: |
+          mkdir build
+          cd build
+          if ("${{ matrix.config.arch }}" -eq "arm64") {
+            cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
+          } else {
+            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
+          }
+          cmake --build . --config Release
+
+      - name: Build liboqs (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: liboqs
+        run: |
+          mkdir build
+          cd build
+          if [ "${{ matrix.config.arch }}" = "arm64" ] && [ "${{ runner.os }}" = "Linux" ]; then
+            # Cross-compile Linux ARM64 via toolchain or Docker fallback
+            cmake .. -G Ninja -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
+          } else {
+            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
+          fi
+          ninja
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oqs-${{ matrix.config.rid }}
+          path: liboqs/build/src/${{ matrix.config.libname }}  # Adjust path if needed (e.g., liboqs/src/liboqs.so)
+
+  pack-nuget:
+    needs: build-natives
+    runs-on: ubuntu-latest  # Or windows if preferred
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download all native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Copy natives to runtimes
+        run: |
+          mkdir -p runtimes/win-x64/native runtimes/win-arm64/native runtimes/linux-x64/native runtimes/linux-arm64/native runtimes/osx-x64/native runtimes/osx-arm64/native
+          cp artifacts/oqs-win-x64/artifact/oqs.dll runtimes/win-x64/native/
+          cp artifacts/oqs-win-arm64/artifact/oqs.dll runtimes/win-arm64/native/
+          cp artifacts/oqs-linux-x64/artifact/liboqs.so runtimes/linux-x64/native/
+          cp artifacts/oqs-linux-arm64/artifact/liboqs.so runtimes/linux-arm64/native/
+          cp artifacts/oqs-osx-x64/artifact/liboqs.dylib runtimes/osx-x64/native/
+          cp artifacts/oqs-osx-arm64/artifact/liboqs.dylib runtimes/osx-arm64/native/
+
+      - name: Pack NuGet
+        run: dotnet pack -c Release --no-build
+
+      - name: Upload NuGet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: bin/Release/*.nupkg
