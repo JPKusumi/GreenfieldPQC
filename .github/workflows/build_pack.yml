@@ -14,8 +14,8 @@ jobs:
         config:
           - { os: windows-latest, arch: x64, rid: win-x64, libname: oqs.dll }
           - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Cross-compile ARM on x64 runner
-          - { os: ubuntu-latest, arch: x64, rid: linux-x64, libname: liboqs.so }
-          - { os: ubuntu-latest, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM
+          - { os: ubuntu-22.04, arch: x64, rid: linux-x64, libname: liboqs.so }
+          - { os: ubuntu-22.04, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM on 22.04
           - { os: macos-latest, arch: x64, rid: osx-x64, libname: liboqs.dylib }
           - { os: macos-14, arch: arm64, rid: osx-arm64, libname: liboqs.dylib }  # Native ARM runner
 
@@ -28,10 +28,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libssl-dev
-          if [ "${{ matrix.config.arch }}" = "arm64" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu libssl-dev-arm64-cross libc6-dev-arm64-cross libstdc++-dev-arm64-cross
-          fi
+          sudo apt-get install -y cmake ninja-build libssl-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross libstdc++-dev-arm64-cross libssl-dev:arm64
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
@@ -87,17 +84,27 @@ jobs:
             export OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=$OPENSSL_ROOT_DIR -DOPENSSL_INCLUDE_DIR=$OPENSSL_ROOT_DIR/include -DOPENSSL_LIBRARIES=$OPENSSL_ROOT_DIR/lib
           elif [ "${{ matrix.config.rid }}" = "linux-arm64" ]; then
-            cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_USE_STATIC_LIBS=FALSE -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/aarch64-linux-gnu/libcrypto.so -DOPENSSL_INCLUDE_DIR=/usr/aarch64-linux-gnu/include
+            cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/aarch64-linux-gnu -DOPENSSL_INCLUDE_DIR=/usr/aarch64-linux-gnu/include -DOPENSSL_CRYPTO_LIBRARY=/usr/aarch64-linux-gnu/lib/libcrypto.so
           else
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
           fi
           ninja
 
+      - name: Copy lib to standard location
+        working-directory: liboqs
+        run: |
+          mkdir -p build/artifact
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp build/bin/Release/oqs.dll build/artifact/ || cp build/bin/Release/*.dll build/artifact/
+          else
+            cp build/lib/${{ matrix.config.libname }} build/artifact/
+          fi
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: oqs-${{ matrix.config.rid }}
-          path: liboqs/build/lib/${{ matrix.config.libname }}  # Updated for Linux/macOS; for Windows, adjust if needed (e.g., bin/Release/oqs.dll)
+          path: liboqs/build/artifact/${{ matrix.config.libname }}
 
   pack-nuget:
     needs: build-natives
@@ -119,12 +126,12 @@ jobs:
       - name: Copy natives to runtimes
         run: |
           mkdir -p runtimes/win-x64/native runtimes/win-arm64/native runtimes/linux-x64/native runtimes/linux-arm64/native runtimes/osx-x64/native runtimes/osx-arm64/native
-          cp artifacts/oqs-win-x64/artifact/oqs.dll runtimes/win-x64/native/ || true
-          cp artifacts/oqs-win-arm64/artifact/oqs.dll runtimes/win-arm64/native/ || true
-          cp artifacts/oqs-linux-x64/artifact/liboqs.so runtimes/linux-x64/native/ || true
-          cp artifacts/oqs-linux-arm64/artifact/liboqs.so runtimes/linux-arm64/native/ || true
-          cp artifacts/oqs-osx-x64/artifact/liboqs.dylib runtimes/osx-x64/native/ || true
-          cp artifacts/oqs-osx-arm64/artifact/liboqs.dylib runtimes/osx-arm64/native/ || true
+          cp artifacts/oqs-win-x64/oqs.dll runtimes/win-x64/native/ || true
+          cp artifacts/oqs-win-arm64/oqs.dll runtimes/win-arm64/native/ || true
+          cp artifacts/oqs-linux-x64/liboqs.so runtimes/linux-x64/native/ || true
+          cp artifacts/oqs-linux-arm64/liboqs.so runtimes/linux-arm64/native/ || true
+          cp artifacts/oqs-osx-x64/liboqs.dylib runtimes/osx-x64/native/ || true
+          cp artifacts/oqs-osx-arm64/liboqs.dylib runtimes/osx-arm64/native/ || true
 
       - name: Pack NuGet
         run: dotnet pack -c Release --no-build
