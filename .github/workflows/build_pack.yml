@@ -33,11 +33,11 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install cmake ninja
 
-      - name: Install Visual Studio Build Tools (Windows)
+      - name: Setup Visual Studio environment (Windows)
         if: runner.os == 'Windows'
-        uses: microsoft/setup-msbuild@v2
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          vs-version: '17.0'
+          arch: ${{ matrix.config.arch == 'arm64' && 'arm64' || 'x64' }}
 
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
@@ -63,11 +63,11 @@ jobs:
           mkdir build
           cd build
           if ("${{ matrix.config.arch }}" -eq "arm64") {
-            cmake .. -G "NMake Makefiles" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
+            cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
           } else {
-            cmake .. -G "NMake Makefiles" -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
+            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
           }
-          cmake --build .
+          cmake --build . --config Release
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
@@ -87,7 +87,7 @@ jobs:
         run: |
           mkdir -p build/artifact
           if [ "${{ runner.os }}" = "Windows" ]; then
-            cp build/oqs.dll build/artifact/ || cp build/*.dll build/artifact/
+            cp build/bin/Release/oqs.dll build/artifact/ || cp build/bin/Release/*.dll build/artifact/
           else
             cp build/lib/${{ matrix.config.libname }} build/artifact/
           fi
