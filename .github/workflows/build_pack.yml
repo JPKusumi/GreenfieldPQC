@@ -65,7 +65,7 @@ jobs:
           if ("${{ matrix.config.arch }}" -eq "arm64") {
             cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_PERMIT_UNSUPPORTED_ARCHITECTURE=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           } else {
-            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INstructions=OFF
+            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           }
           cmake --build . --config Release -- /m
           Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName
@@ -89,8 +89,10 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path build/artifact -ItemType Directory
+          Copy-Item -Path build/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
           Copy-Item -Path build/bin/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
-          if (-not (Test-Path build/artifact/oqs.dll)) { Write-Error "DLL not found in build/bin/Release!" }
+          Copy-Item -Path build/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
+          if (-not (Test-Path build/artifact/oqs.dll)) { Write-Error "DLL not found in expected locations!" }
 
       - name: Copy lib to standard location (Linux/macOS)
         if: runner.os != 'Windows'
