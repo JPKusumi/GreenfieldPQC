@@ -44,7 +44,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build libssl-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           if [ "${{ matrix.config.arch }}" = "arm64" ]; then
-            sudo apt-get install -y libc6-dev:arm64 libstdc++-11-dev:arm64 libssl-dev:arm64
+            sudo apt-get install -y libc6-dev-arm64-cross libstdc++-11-dev-arm64-cross libssl-dev-arm64-cross
           fi
 
       - name: Install dependencies (macOS)
@@ -101,7 +101,7 @@ jobs:
             export OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=$OPENSSL_ROOT_DIR -DOPENSSL_INCLUDE_DIR=$OPENSSL_ROOT_DIR/include -DOPENSSL_LIBRARIES=$OPENSSL_ROOT_DIR/lib
           elif [ "${{ matrix.config.rid }}" = "linux-arm64" ]; then
-            cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_USE_STATIC_LIBS=FALSE -DOPENSSL_ROOT_DIR=/usr/aarch64-linux-gnu -DOPENSSL_INCLUDE_DIR=/usr/aarch64-linux-gnu/include -DOPENSSL_CRYPTO_LIBRARY=/usr/aarch64-linux-gnu/lib/libcrypto.so -DOPENSSL_SSL_LIBRARY=/usr/aarch64-linux-gnu/lib/libssl.so
+            cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOPENSSL_USE_STATIC_LIBS=FALSE -DOPENSSL_CRYPTO_LIBRARY=/usr/aarch64-linux-gnu/lib/libcrypto.so -DOPENSSL_INCLUDE_DIR=/usr/aarch64-linux-gnu/include -DOPENSSL_SSL_LIBRARY=/usr/aarch64-linux-gnu/lib/libssl.so -DOPENSSL_ROOT_DIR=/usr/aarch64-linux-gnu
           else
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release
           fi
