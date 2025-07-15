@@ -18,5 +18,6 @@
       <TargetPath>oqs.dll</TargetPath>
     </None>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <None Include="runtimes\**\*" Pack="true" PackagePath="runtimes" />
   </ItemGroup>
 </Project>
