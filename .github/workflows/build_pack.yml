@@ -116,6 +116,27 @@ jobs:
         run: dotnet restore
 
       - name: Download all native artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: oqs-${{ matrix.config.rid }}
+          path: liboqs/build/artifact/${{ matrix.config.libname }}
+
+  pack-nuget:
+    needs: build-natives
+    runs-on: ubuntu-latest  # Or windows if preferred
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Download all native artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -133,7 +154,7 @@ jobs:
         run: dotnet build -c Release
 
       - name: Pack NuGet
-        run: dotnet pack -c Release --no-build --output nupkgs
+        run: dotnet pack GreenfieldPQC/GreenfieldPQC.csproj -c Release --no-build --output nupkgs
 
       - name: Upload NuGet artifact
         uses: actions/upload-artifact@v4
