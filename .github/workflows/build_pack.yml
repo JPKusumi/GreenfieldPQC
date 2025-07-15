@@ -90,7 +90,7 @@ jobs:
         shell: cmd {0}
         run: |
           mkdir build\artifact
-          copy build\oqs.dll build\artifact\ || echo "DLL not found!" && exit 1
+          copy build\oqs.dll build\artifact\ || (echo DLL not found! & exit 1)
 
       - name: Copy lib to standard location (Linux/macOS)
         if: runner.os != 'Windows'
@@ -145,4 +145,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nuget-package
-          path: bin/Release/*.nupkg
+          path: GreenfieldPQC/bin/Release/*.nupkg
