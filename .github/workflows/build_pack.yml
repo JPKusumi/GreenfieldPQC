@@ -63,11 +63,11 @@ jobs:
           mkdir build
           cd build
           if ("${{ matrix.config.arch }}" -eq "arm64") {
-            cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
+            cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic
           } else {
-            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
+            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic
           }
-          cmake --build . --config Release --verbose -- /m
+          cmake --build . --config Release -- /m
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
@@ -76,9 +76,9 @@ jobs:
           mkdir build
           cd build
           if [ "${{ matrix.config.rid }}" = "linux-arm64" ]; then
-            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake
+            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake
           else
-            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF
+            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic
           fi
           ninja
 
@@ -90,6 +90,7 @@ jobs:
           New-Item -Path build/artifact -ItemType Directory
           Copy-Item -Path build/bin/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
           Copy-Item -Path build/bin/Release/*.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
+          Copy-Item -Path build/src/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
 
       - name: Copy lib to standard location (Linux/macOS)
         if: runner.os != 'Windows'
