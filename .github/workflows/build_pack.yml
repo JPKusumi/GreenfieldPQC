@@ -14,7 +14,6 @@ jobs:
       matrix:
         config:
           - { os: windows-latest, arch: x64, rid: win-x64, libname: oqs.dll }
-          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Cross-compile ARM on x64 runner
           - { os: ubuntu-22.04, arch: x64, rid: linux-x64, libname: liboqs.so }
           - { os: ubuntu-22.04, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM on 22.04
           - { os: macos-latest, arch: x64, rid: osx-x64, libname: liboqs.dylib }
@@ -37,7 +36,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: ${{ matrix.config.arch == 'arm64' && 'arm64' || 'x64' }}
+          arch: x64
 
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
@@ -62,11 +61,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          if ("${{ matrix.config.arch }}" -eq "arm64") {
-            cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_PERMIT_UNSUPPORTED_ARCHITECTURE=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
-          } else {
-            cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
-          }
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           cmake --build . --config Release -- /m
           Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName
 
@@ -89,10 +84,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -Path build/artifact -ItemType Directory
-          Copy-Item -Path build/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
           Copy-Item -Path build/bin/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
-          Copy-Item -Path build/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
-          if (-not (Test-Path build/artifact/oqs.dll)) { Write-Error "DLL not found in expected locations!" }
+          if (-not (Test-Path build/artifact/oqs.dll)) { Write-Error "DLL not found!" }
 
       - name: Copy lib to standard location (Linux/macOS)
         if: runner.os != 'Windows'
@@ -105,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: oqs-${{ matrix.config.rid }}
-          path: liboqs/build/artifact/${{ matrix.config.libname }}
+          path: liboqs/build/artifact/**
 
   pack-nuget:
     needs: build-natives
@@ -129,9 +122,8 @@ jobs:
 
       - name: Copy natives to runtimes
         run: |
-          mkdir -p runtimes/win-x64/native runtimes/win-arm64/native runtimes/linux-x64/native runtimes/linux-arm64/native runtimes/osx-x64/native runtimes/osx-arm64/native
+          mkdir -p runtimes/win-x64/native runtimes/linux-x64/native runtimes/linux-arm64/native runtimes/osx-x64/native runtimes/osx-arm64/native
           cp artifacts/oqs-win-x64/oqs.dll runtimes/win-x64/native/ || true
-          cp artifacts/oqs-win-arm64/oqs.dll runtimes/win-arm64/native/ || true
           cp artifacts/oqs-linux-x64/liboqs.so runtimes/linux-x64/native/ || true
           cp artifacts/oqs-linux-arm64/liboqs.so runtimes/linux-arm64/native/ || true
           cp artifacts/oqs-osx-x64/liboqs.dylib runtimes/osx-x64/native/ || true
