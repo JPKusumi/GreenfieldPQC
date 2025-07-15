@@ -55,6 +55,13 @@ jobs:
           echo "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >> toolchain-aarch64.cmake
           echo "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> toolchain-aarch64.cmake
 
+      - name: Create toolchain file for Windows ARM64
+        if: matrix.config.rid == 'win-arm64'
+        working-directory: liboqs
+        run: |
+          echo "set(CMAKE_SYSTEM_NAME Windows)" > toolchain-arm64.cmake
+          echo "set(CMAKE_SYSTEM_PROCESSOR aarch64)" >> toolchain-arm64.cmake
+
       - name: Build liboqs (Windows)
         if: runner.os == 'Windows'
         working-directory: liboqs
@@ -65,12 +72,11 @@ jobs:
           mkdir build
           cd build
           if "%ARCH%" == "arm64" (
-            cmake .. -G "NMake Makefiles" -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_PERMIT_UNSUPPORTED_ARCHITECTURE=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
+            cmake .. -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchain-arm64.cmake -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_PERMIT_UNSUPPORTED_ARCHITECTURE=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           ) else (
             cmake .. -G "NMake Makefiles" -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           )
           nmake
-          dir .
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
@@ -146,4 +152,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nuget-package
-          path: GreenfieldPQC/bin/Release/*.nupkg
+          path: bin/Release/*.nupkg
