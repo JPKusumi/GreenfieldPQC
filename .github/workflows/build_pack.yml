@@ -70,6 +70,7 @@ jobs:
             cmake .. -G "NMake Makefiles" -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           )
           nmake
+          dir .
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
@@ -115,7 +116,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Restore NuGet packages
         run: dotnet restore
