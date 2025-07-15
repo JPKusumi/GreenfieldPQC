@@ -67,7 +67,7 @@ jobs:
           } else {
             cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
           }
-          cmake --build . --config Release --verbose -- /v:diag /m
+          cmake --build . --config Release --verbose -- /m
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
@@ -82,15 +82,21 @@ jobs:
           fi
           ninja
 
-      - name: Copy lib to standard location
+      - name: Copy lib to standard location (Windows)
+        if: runner.os == 'Windows'
+        working-directory: liboqs
+        shell: pwsh
+        run: |
+          New-Item -Path build/artifact -ItemType Directory
+          Copy-Item -Path build/bin/Release/oqs.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
+          Copy-Item -Path build/bin/Release/*.dll -Destination build/artifact/ -ErrorAction SilentlyContinue
+
+      - name: Copy lib to standard location (Linux/macOS)
+        if: runner.os != 'Windows'
         working-directory: liboqs
         run: |
           mkdir -p build/artifact
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            cp build/src/Release/oqs.dll build/artifact/ || cp build/Release/*.dll build/artifact/ || cp build/bin/Release/oqs.dll build/artifact/
-          else
-            cp build/lib/${{ matrix.config.libname }} build/artifact/
-          fi
+          cp build/lib/${{ matrix.config.libname }} build/artifact/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
