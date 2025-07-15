@@ -67,7 +67,7 @@ jobs:
           } else {
             cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
           }
-          cmake --build . --config Release
+          cmake --build . --config Release -- /m
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
@@ -87,7 +87,7 @@ jobs:
         run: |
           mkdir -p build/artifact
           if [ "${{ runner.os }}" = "Windows" ]; then
-            cp build/bin/Release/oqs.dll build/artifact/ || cp build/bin/Release/*.dll build/artifact/
+            cp build/src/Release/oqs.dll build/artifact/ || cp build/Release/*.dll build/artifact/ || cp build/bin/Release/oqs.dll build/artifact/
           else
             cp build/lib/${{ matrix.config.libname }} build/artifact/
           fi
