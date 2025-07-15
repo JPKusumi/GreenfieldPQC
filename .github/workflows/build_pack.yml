@@ -90,7 +90,7 @@ jobs:
         shell: cmd {0}
         run: |
           mkdir build\artifact
-          copy build\oqs.dll build\artifact\
+          copy build\oqs.dll build\artifact\ || echo "DLL not found!" && exit 1
 
       - name: Copy lib to standard location (Linux/macOS)
         if: runner.os != 'Windows'
@@ -115,7 +115,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Restore NuGet packages
         run: dotnet restore
