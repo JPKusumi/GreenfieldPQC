@@ -67,7 +67,7 @@ jobs:
           } else {
             cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF
           }
-          cmake --build . --config Release -- /m
+          cmake --build . --config Release --verbose -- /v:diag /m
 
       - name: Build liboqs (Linux/macOS)
         if: runner.os != 'Windows'
