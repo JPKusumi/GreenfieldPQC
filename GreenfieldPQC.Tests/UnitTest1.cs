@@ -223,7 +223,7 @@ namespace GreenfieldPQC.Tests
             byte[] expectedCiphertext = Convert.FromHexString(ciphertextHex);
 
             byte[] plaintext = Encoding.UTF8.GetBytes("No man is an island, entire of itself; every man is a piece of the continent, a part of the main. If a clod be washed away by the sea, Europe is the less, as well as if a promontory were, as well as if a manor of thy friend's or of thine own were: any man's death diminishes me, because I am involved in mankind, and therefore never send to know for whom the bell tolls; it tolls for thee.");
-            using var cipher = new Kusumi512(key, nonce);
+            using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
 
             byte[] ciphertext1 = cipher.Encrypt(plaintext);
             try
@@ -235,14 +235,14 @@ namespace GreenfieldPQC.Tests
             {
                 Log($"Kusumi512 Actual Ciphertext File Write Error: {ex.Message}");
             }
-            using var decryptCipher1 = new Kusumi512(key, nonce);
+            using var decryptCipher1 = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] decrypted1 = decryptCipher1.Decrypt(ciphertext1);
             Assert.Equal(plaintext, decrypted1);
             Assert.Equal(expectedCiphertext, ciphertext1);
 
-            using var cipher2 = new Kusumi512(key, nonce);
+            using var cipher2 = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] ciphertext2 = cipher2.Encrypt(plaintext);
-            using var decryptCipher2 = new Kusumi512(key, nonce);
+            using var decryptCipher2 = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] decrypted2 = decryptCipher2.Decrypt(ciphertext2);
             Assert.Equal(plaintext, decrypted2);
             Assert.Equal(expectedCiphertext, ciphertext2);
@@ -410,7 +410,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void GenerateKeyPair_EncapsulateDecapsulate_RoundTrip()
         {
-            using var kyber = new Kyber(new KyberParameters(512));
+            var kyber = CryptoFactory.CreateKyber(512);
             var (publicKey, privateKey) = kyber.GenerateKeyPair();
             var (sharedSecret1, ciphertext) = kyber.Encapsulate(publicKey);
             byte[] sharedSecret2 = kyber.Decapsulate(ciphertext, privateKey);
@@ -447,7 +447,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void GenerateKeyPair_SignVerify_ValidSignature()
         {
-            using var dilithium = new Dilithium(new DilithiumParameters(2));
+            var dilithium = CryptoFactory.CreateDilithium(2);
             var (publicKey, privateKey) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
             byte[] signature = dilithium.Sign(message, privateKey);
@@ -464,7 +464,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void Verify_InvalidSignature_ReturnsFalse()
         {
-            using var dilithium = new Dilithium(new DilithiumParameters(2));
+            var dilithium = CryptoFactory.CreateDilithium(2);
             var (publicKey, privateKey) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
             byte[] signature = new byte[dilithium.GetSignatureLength()];
@@ -511,7 +511,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void CreateKyber_ReturnsKyber()
         {
-            using var kyber = new Kyber(new KyberParameters(512));
+            var kyber = CryptoFactory.CreateKyber(512);
             Assert.IsType<Kyber>(kyber);
             Assert.Equal("ML-KEM-512", kyber.AlgorithmName);
             Log("CryptoFactory_CreateKyber_ReturnsKyber passed");
@@ -520,7 +520,7 @@ namespace GreenfieldPQC.Tests
         [Fact]
         public void CreateDilithium_ReturnsDilithium()
         {
-            using var dilithium = new Dilithium(new DilithiumParameters(2));
+            var dilithium = CryptoFactory.CreateDilithium(2);
             Assert.IsType<Dilithium>(dilithium);
             Assert.Equal("ML-DSA-44", dilithium.AlgorithmName);
             Log("CryptoFactory_CreateDilithium_ReturnsDilithium passed");

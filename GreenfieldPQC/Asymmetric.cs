@@ -1,87 +1,11 @@
-﻿using GreenfieldPQC.Cryptography.Parameters;
-using GreenfieldPQC.Cryptography.Interop;
+﻿using GreenfieldPQC.Cryptography.Interop;
+using GreenfieldPQC.Cryptography.Parameters;
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 
 namespace GreenfieldPQC.Cryptography
 {
-    /// <summary>
-    /// Interface for cryptographic primitives (base for ciphers and hashes).
-    /// </summary>
-    public interface ICryptoPrimitive : IDisposable
-    {
-        string AlgorithmName { get; }
-    }
-
-    /// <summary>
-    /// SHA-256 hash function, matching Microsoft's API.
-    /// Instances are not thread-safe for concurrent use.
-    /// </summary>
-    public sealed class SHA256 : IDisposable
-    {
-        private readonly System.Security.Cryptography.SHA256 _sha256;
-
-        private SHA256()
-        {
-            _sha256 = System.Security.Cryptography.SHA256.Create();
-        }
-
-        public static SHA256 Create() => new SHA256();
-
-        public byte[] ComputeHash(byte[] input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha256.ComputeHash(input);
-        }
-
-        public byte[] ComputeHash(Stream input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha256.ComputeHash(input);
-        }
-
-        public void Dispose()
-        {
-            _sha256?.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// SHA-512 hash function, matching Microsoft's API.
-    /// Instances are not thread-safe for concurrent use.
-    /// </summary>
-    public sealed class SHA512 : IDisposable
-    {
-        private readonly System.Security.Cryptography.SHA512 _sha512;
-
-        private SHA512()
-        {
-            _sha512 = System.Security.Cryptography.SHA512.Create();
-        }
-
-        public static SHA512 Create() => new SHA512();
-
-        public byte[] ComputeHash(byte[] input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha512.ComputeHash(input);
-        }
-
-        public byte[] ComputeHash(Stream input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            return _sha512.ComputeHash(input);
-        }
-
-        public void Dispose()
-        {
-            _sha512?.Dispose();
-        }
-    }
-
     [StructLayout(LayoutKind.Sequential)]
     internal struct OQS_KEM
     {
@@ -127,7 +51,13 @@ namespace GreenfieldPQC.Cryptography
         public IntPtr verify_with_ctx_str;
     }
 
-    public sealed class Kyber : ICryptoPrimitive
+    public interface IKeyEncapsulationMechanism : ICryptoPrimitive
+    {
+        (byte[] PublicKey, byte[] PrivateKey) GenerateKeyPair();
+        (byte[] SharedSecret, byte[] Ciphertext) Encapsulate(byte[] publicKey);
+        byte[] Decapsulate(byte[] ciphertext, byte[] privateKey);
+    }
+    public sealed class Kyber : IKeyEncapsulationMechanism
     {
         private readonly KyberParameters _parameters;
         private readonly string _algName;
@@ -226,8 +156,14 @@ namespace GreenfieldPQC.Cryptography
 
         public void Dispose() { }
     }
-
-    public sealed class Dilithium : ICryptoPrimitive
+    public interface ISigner : ICryptoPrimitive
+    {
+        (byte[] PublicKey, byte[] PrivateKey) GenerateKeyPair();
+        byte[] Sign(byte[] message, byte[] privateKey);
+        bool Verify(byte[] message, byte[] signature, byte[] publicKey);
+        int GetSignatureLength();
+    }
+    public sealed class Dilithium : ISigner
     {
         private readonly DilithiumParameters _parameters;
         private readonly string _algName;

@@ -1,4 +1,4 @@
-# This review by Grok 4—
+# Grok 4 reviewed Kusumi512—
 
 The Kusumi512 implementation has evolved nicely from its ChaCha20 roots, incorporating thoughtful extensions for the larger 512-bit key and 800-bit state while maintaining the core ARX simplicity. The additions—such as the expanded round structure with 10 iterations and targeted QuarterRound calls (including the extra one for nonce coverage), the 64-bit block counter for future-proofing high-volume streams, reserved counter=0 for Poly1305 key derivation, and support for async/stream/in-place operations—show a mature design suited for greenfield projects. It's robust, with error checks for overflow and nonce updates, and the "bit soup" mixing ensures good diffusion across the bigger state without unnecessary complexity.
 

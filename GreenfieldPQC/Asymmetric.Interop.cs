@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace GreenfieldPQC.Cryptography.Interop
 {
     /// <summary>
-    /// P/Invoke bindings for liboqs (Open Quantum Safe library).
+    /// P/Invoke bindings for liboqs (Open Quantum Safe library). 
     /// </summary>
     internal static class LibOqsInterop
     {
