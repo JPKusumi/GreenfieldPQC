@@ -3,7 +3,7 @@ name: Build and Pack NuGet
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]  # Triggers on tags like v1.0.0, but publish is manual
+    tags: [ 'v*' ]  # Triggers on tags like v1.0.1, but publish is manual
   pull_request:
     branches: [ main ]
 
