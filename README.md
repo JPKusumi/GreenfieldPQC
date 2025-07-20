@@ -290,7 +290,7 @@ Static factory for keys, nonces, and instances.
   - `Kyber`/`Dilithium`: Algorithm-specific (use CreateKyber/CreateDilithium for instantiation).
   - Example: `byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512);`
 
-- **GenerateNonce(CipherAlgorithm alg)**: Random nonce (16 bytes for Kusumi).
+- **GenerateNonce(CipherAlgorithm alg)**: Random nonce (12 bytes for Kusumi).
   - Example: `byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);`
 
 - **CreateKusumi512(byte[] key, byte[] nonce)**: Kusumi512 instance.
