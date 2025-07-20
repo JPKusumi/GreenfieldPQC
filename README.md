@@ -138,7 +138,7 @@ It is also a stream cipher and boasts a 64-bit block counter. This makes it suit
 (*If you stream 4K video and depend on a 32-bit block counter, you may need to reset your system in less than 72 hours; often daily, or every other day.)
 
 **API Highlights**:
-- `CryptoFactory.CreateKusumi512(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 16 bytes).
+- `CryptoFactory.CreateKusumi512(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 12 bytes).
 - `ISymmetricCipher.Encrypt(byte[] plaintext)`: Returns ciphertext (stream mode).
 - `ISymmetricCipher.Decrypt(byte[] ciphertext)`: Returns plaintext.
 - `ISymmetricCipher.EncryptInPlace(Span<byte> data)`: In-place encryption for performance.
@@ -175,7 +175,7 @@ Like Kusumi512, it uses a 512-bit key and is designed for post-quantum security,
 In the developer API, Kusumi512Poly1305 supports streaming operations and is efficient for high-throughput applications, aligning with the performance advantages seen in Kusumi512 benchmarks.
 
 **API Highlights**:
-- `CryptoFactory.CreateKusumi512Poly1305(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 16 bytes).
+- `CryptoFactory.CreateKusumi512Poly1305(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 12 bytes).
 - `ISymmetricCipher.Encrypt(byte[] plaintext)`: Returns ciphertext + tag.
 - `ISymmetricCipher.Decrypt(byte[] ciphertextWithTag)`: Returns plaintext or throws on tamper.
 - Supports in-place and stream variants (similar to Kusumi512, with tag appended for AEAD).
