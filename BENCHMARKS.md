@@ -55,7 +55,7 @@ Python tests showed similar trends, with Kusumi at ~1,229 bytes vs. Threefish at
 
 ## Discussion
 
-Kusumi512's performance edge stems from its ChaCha20-derived ARX structure, optimized with 10 rounds and Unsafe accesses for better cache locality, making it more suitable for high-throughput scenarios like 4K video encryption. Threefish-512, while efficient on 64-bit systems, incurs higher overhead from its tweak scheduling and round count (72 rounds). The memory savings in Kusumi512 are particularly beneficial for resource-constrained environments.
+Kusumi512's performance edge stems from its ChaCha20-derived ARX structure, optimized with 10 rounds and optimized state access for better cache locality, making it more suitable for high-throughput scenarios like 4K video encryption. Threefish-512, while efficient on 64-bit systems, incurs higher overhead from its tweak scheduling and round count (72 rounds). The memory savings in Kusumi512 are particularly beneficial for resource-constrained environments.
 
 In pure-software Python contexts, Threefish occasionally edges ahead due to 64-bit word alignment, but C#'s JIT and hardware accel favor Kusumi's design. Both ciphers provide robust 512-bit security against quantum threats (e.g., Grover's algorithm), but Kusumi512's speed and low allocation position it as the "winning" option for greenfield post-quantum toolkits.
 
