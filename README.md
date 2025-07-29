@@ -23,8 +23,7 @@ Via NuGet:
 ```
 dotnet add package GreenfieldPQC
 ```
-
-Requires .NET 8.0+. Enable `<AllowUnsafeBlocks>true</AllowUnsafeBlocks>` in your .csproj for optimizations. oqs.dll bundled for supported platforms.
+Requires .NET 8.0+. Bundles oqs.dll for supported platforms (win/linux/osx, x64/arm64). No additional configuration needed.
 
 ## Quick Start
 ```csharp
