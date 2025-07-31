@@ -314,7 +314,7 @@ In the developer API, Kusumi512Poly1305 supports streaming operations and is eff
 - `CryptoFactory.CreateKusumi512Poly1305(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 12 bytes).
 - `ISymmetricCipher.Encrypt(byte[] plaintext)`: Returns ciphertext + tag.
 - `ISymmetricCipher.Decrypt(byte[] ciphertextWithTag)`: Returns plaintext or throws on tamper.
-- Supports in-place and stream variants (similar to Kusumi512, with tag appended for AEAD).
+- Note that EncryptInPlace (and DecryptInPlace) are not supported in the Poly1305 version of Kusumi512.
 
 **Example**:
 ```csharp
