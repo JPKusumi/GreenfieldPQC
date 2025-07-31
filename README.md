@@ -381,10 +381,8 @@ Static factory for keys, nonces, and instances.
   - `Kusumi512`/`Kusumi512Poly1305`: 64 bytes.
   - `Kyber`/`Dilithium`: Algorithm-specific (use CreateKyber/CreateDilithium for instantiation).
   - Example: `byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512);`
-
 - **GenerateNonce(CipherAlgorithm alg)**: Random nonce (12 bytes for Kusumi).
   - Example: `byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);`
-
 - **CreateKusumi512(byte[] key, byte[] nonce)**: Kusumi512 instance.
 - **CreateKusumi512Poly1305(byte[] key, byte[] nonce)**: AEAD instance.
 - **CreateKyber(int level)**: Returns IKeyEncapsulationMechanism (level: 512, 768, 1024).
@@ -392,7 +390,6 @@ Static factory for keys, nonces, and instances.
 - **CreateSHA256()**: Returns SHA256 instance.
 - **CreateSHA512()**: Returns SHA512 instance.
 - **CreateHash(HashAlgorithmType type)**: Returns IHashAlgorithm (type: SHA256, SHA512).
-
 - **ComputeSHA256(byte[] data)**: SHA-256 hash.
 - **ComputeSHA512(byte[] data)**: SHA-512 hash.
   - Example: `byte[] hash = CryptoFactory.ComputeSHA512(data);`
