@@ -5,6 +5,8 @@ All notable changes to GreenfieldPQC will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+As of July 31, 2025, the README has been substantially reworked and updated.
+
 An earlier version of the README was recommending &lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt; in the project file. It's not necessary for users who are consuming the NuGet package, so this advice was removed. The Installation section is now simplified.
 
 An earlier version of the README was incorrect about the nonce size.
