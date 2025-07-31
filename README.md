@@ -172,12 +172,12 @@ string decrypted = Encoding.UTF8.GetString(decryptedBytes);
 
 Console.WriteLine(decrypted);  // "Confidential photos data"
 ```
-Notes:  
-• Use secure channels for exchanges if possible, but Kyber ensures the shared secret is safe even over insecure ones.
-• For files/streams: Replace byte arrays with EncryptStreamAsync/DecryptStreamAsync for large data like photos.
-• Verify equality of shared secrets with CryptographicOperations.FixedTimeEquals in tests.
-• Rotate nonces/keys per session; include timestamps in data for replay protection.
-• Error handling: Wrap in try-catch for exceptions like invalid tags.
+**Notes:**  
+• Use secure channels for exchanges if possible, but Kyber ensures the shared secret is safe even over insecure ones.  
+• For files/streams: Replace byte arrays with EncryptStreamAsync/DecryptStreamAsync for large data like photos.  
+• Verify equality of shared secrets with CryptographicOperations.FixedTimeEquals in tests.  
+• Rotate nonces/keys per session; include timestamps in data for replay protection.  
+• Error handling: Wrap in try-catch for exceptions like invalid tags.  
 
 ### Another Usage Example: Stream Encryption  
 ```csharp
