@@ -14,7 +14,7 @@ Where the old normal was to use 256-bit keys and hashes, the new normal is to us
 
 Hence, a key feature of the new normal is that devs and storage systems must accomodate larger data sizes for keys and hashes. While 256 bits is 32 bytes, 512 bits is 64 bytes.  
 
-Package note. This package is best for green field development � new projects, not legacy systems. Corporate, legacy systems need more than code; database schemas may need to change, and they may choose to re-encrypt vulnerable data. Conversely, if you are on a green field project, then you can drop in this package and go. The name, GreenfieldPQC, indicates that brown field redevelopment on legacy systems is out of scope for this package.  
+Package note. This package is best for green field development — new projects, not legacy systems. Corporate, legacy systems need more than code; database schemas may need to change, and they may choose to re-encrypt vulnerable data. Conversely, if you are on a green field project, then you can drop in this package and go. The name, GreenfieldPQC, indicates that brown field redevelopment on legacy systems is out of scope for this package.  
 
 Upon review, Grok has said, "This library is suitable for greenfield projects transitioning to the 'new normal' of quantum-safe cryptography."  
 
@@ -57,29 +57,29 @@ Console.WriteLine(Encoding.UTF8.GetString(decrypted)); // "Hello, PQC!"
 GreenfieldPQC enables "future-proof" encryption upgrades with minimal disruption, targeting quantum-resistant primitives for new ("greenfield") projects. Key benefits:  
 
 - **Quantum Resistance**: Kusumi512 offers 512-bit keys for symmetric encryption (effective 256-bit security post-Grover), outperforming Threefish-512 in benchmarks (7-9% faster execution, 40-58% less memory). Kyber and Dilithium are NIST-standardized for asymmetric needs.  
-- **Efficiency**: Optimized for .NET (C#), with low overhead�ideal for high-throughput apps like cloud services, IoT, or data pipelines.  
+- **Efficiency**: Optimized for .NET (C#), with low overhead—ideal for high-throughput apps like cloud services, IoT, or data pipelines.  
 - **Ease of Adoption**: NuGet integration; bundles oqs.dll for native PQC support (via P/Invoke for Kyber and Dilithium); requires .NET 8+.  
 - **Risk Mitigation**: Addresses media "drumbeat" on quantum threats; supports compliance (e.g., FIPS-like standards pending NIST finalization).  
 - **Benchmarks Summary**: From BENCHMARKS.md (in repo root), Kusumi512 excels in speed and RAM vs. alternatives, making it a practical "new normal" for 512-bit symmetric crypto.  
 
-Evaluate via a proof-of-concept: Install the package and test Kusumi512 for your workload. For ROI, consider avoided breaches in a post-quantum world�contact NIST or consult [xAI's resources](https://x.ai) for broader AI/quantum insights.  
+Evaluate via a proof-of-concept: Install the package and test Kusumi512 for your workload. For ROI, consider avoided breaches in a post-quantum world—contact NIST or consult [xAI's resources](https://x.ai) for broader AI/quantum insights.  
 
 Resources:
-- **Cryptography Basics**: [Wikipedia: Cryptography](https://en.wikipedia.org/wiki/Cryptography) � A high-level intro to encryption concepts.  
-- **Symmetric vs. Asymmetric Encryption**: [Khan Academy: Cryptography](https://www.khanacademy.org/computing/computer-science/cryptography) � Free videos explaining keys, ciphers, and hashes.  
-- **Quantum Threats**: [NIST Post-Quantum Cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography) � Explains why quantum computers could break current encryption and the shift to PQC.  
-- **Quantum Computing Primer**: [IBM: What is Quantum Computing?](https://www.ibm.com/topics/quantum-computing) � Simple explanation of the "quantum threat" in news stories.  
-- **Why Larger Keys Matter**: [Cloudflare: Post-Quantum Cryptography](https://blog.cloudflare.com/post-quantum-cryptography/) � Real-world context on urgency without deep math.  
+- **Cryptography Basics**: [Wikipedia: Cryptography](https://en.wikipedia.org/wiki/Cryptography) — A high-level intro to encryption concepts.  
+- **Symmetric vs. Asymmetric Encryption**: [Khan Academy: Cryptography](https://www.khanacademy.org/computing/computer-science/cryptography) — Free videos explaining keys, ciphers, and hashes.  
+- **Quantum Threats**: [NIST Post-Quantum Cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography) — Explains why quantum computers could break current encryption and the shift to PQC.  
+- **Quantum Computing Primer**: [IBM: What is Quantum Computing?](https://www.ibm.com/topics/quantum-computing) — Simple explanation of the "quantum threat" in news stories.  
+- **Why Larger Keys Matter**: [Cloudflare: Post-Quantum Cryptography](https://blog.cloudflare.com/post-quantum-cryptography/) — Real-world context on urgency without deep math.  
 
 ## End-to-End Example  
 
-Alice and Bob are old friends who love sharing secrets, but in this digital age, they're paranoid about eavesdroppers�like quantum computers that could one day crack traditional key exchanges. Alice wants to send Bob some confidential photos from their latest adventure, but she needs a super-secure way to encrypt them using her new favorite symmetric cipher, Kusumi512, which requires a 512-bit shared key. The problem? They don't have a secure way to agree on that key over the internet without someone intercepting it.
+Alice and Bob are old friends who love sharing secrets, but in this digital age, they're paranoid about eavesdroppers—like quantum computers that could one day crack traditional key exchanges. Alice wants to send Bob some confidential photos from their latest adventure, but she needs a super-secure way to encrypt them using her new favorite symmetric cipher, Kusumi512, which requires a 512-bit shared key. The problem? They don't have a secure way to agree on that key over the internet without someone intercepting it.
 
 Enter Kyber, the post-quantum hero of key encapsulation mechanisms (KEMs). It's like a magical lockbox that's safe even from future quantum villains. Here's how their story unfolds:
 
-1. **Alice Prepares the Lockbox**: Alice generates a Kyber key pair on her computer�a public key (like an open lock anyone can see) and a private key (the secret code to unlock it). She sends the public key to Bob over the open internet. No worries if someone like Eve intercepts it; the public key is useless without the private one.
+1. **Alice Prepares the Lockbox**: Alice generates a Kyber key pair on her computer—a public key (like an open lock anyone can see) and a private key (the secret code to unlock it). She sends the public key to Bob over the open internet. No worries if someone like Eve intercepts it; the public key is useless without the private one.
 
-2. **Bob Seals the Secret**: Bob receives Alice's public key and decides on a random shared secret (this will become their 512-bit Kusumi512 key). Using Kyber, he "encapsulates" this secret inside a ciphertext�a digital envelope sealed with Alice's public key. Only Alice can open it. Bob sends this ciphertext back to Alice.
+2. **Bob Seals the Secret**: Bob receives Alice's public key and decides on a random shared secret (this will become their 512-bit Kusumi512 key). Using Kyber, he "encapsulates" this secret inside a ciphertext—a digital envelope sealed with Alice's public key. Only Alice can open it. Bob sends this ciphertext back to Alice.
 
 3. **Alice Unlocks the Secret**: Alice uses her private key to "decapsulate" the ciphertext, revealing the exact shared secret Bob chose. Now both Alice and Bob have the same 512-bit key, and Eve (even with a quantum computer) can't figure it out because Kyber's lattice-based math is too tricky for Shor's algorithm.
 
@@ -87,13 +87,13 @@ Enter Kyber, the post-quantum hero of key encapsulation mechanisms (KEMs). It's 
 
 5. **Bob Decrypts and Enjoys**: Bob uses the same shared Kusumi512 key to decrypt the photos and verify the Poly1305 tag. If everything checks out, he sees the images perfectly. If not, he knows something's fishy.
 
-In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approach�post-quantum key exchange plus symmetric encryption�is the gold standard for future-proofing, enabled by this GreenfieldPQC toolkit for .NET developers. If quantum threats escalate, they're ready!
+In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approach—post-quantum key exchange plus symmetric encryption—is the gold standard for future-proofing, enabled by this GreenfieldPQC toolkit for .NET developers. If quantum threats escalate, they're ready!
 
 ### How to Implement the End-to-End Example  
 
 To implement the Alice and Bob scenario in C#, we'll use Kyber for quantum-safe key exchange, SHA512 to derive a 512-bit symmetric key from Kyber's 256-bit shared secret, and Kusumi512Poly1305 for authenticated bulk encryption (AEAD mode). This ensures confidentiality, integrity, and authenticity.  
 
-Assume Alice and Bob have a way to exchange data (e.g., via files or a network channel�out of scope here). We'll use level 1024 for Kyber (high security) and focus on synchronous methods for simplicity. Use using statements for disposal.  
+Assume Alice and Bob have a way to exchange data (e.g., via files or a network channel—out of scope here). We'll use level 1024 for Kyber (high security) and focus on synchronous methods for simplicity. Use using statements for disposal.  
 
 #### Alice's Code (Generate Key Pair, Send Public Key, Receive Ciphertext, Derive Key, Encrypt Data)
 ```csharp
