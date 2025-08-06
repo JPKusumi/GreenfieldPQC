@@ -201,6 +201,12 @@ In practice, one party (the sender) uses the recipient's public key to generate 
 
 Common use cases include establishing session keys for secure communication protocols, replacing classical methods like ECDH in TLS handshakes, or bootstrapping symmetric encryption in hybrid cryptosystems. This ensures forward secrecy and quantum resistance for applications like secure messaging or VPNs.
 
+| Security Level | Public Key (pk) | Private Key (sk) | Ciphertext (ct) |
+|----------------|-----------------|------------------|-----------------|
+| 512           | 800 bytes      | 1632 bytes      | 768 bytes      |
+| 768           | 1184 bytes     | 2400 bytes      | 1088 bytes     |
+| 1024          | 1568 bytes     | 3168 bytes      | 1568 bytes     |
+
 ### In Practice
 
 **API Highlights** (Security levels: 512, 768, 1024):
@@ -232,6 +238,13 @@ A digital signature algorithm allows a signer to prove the authenticity and inte
 In practice, the signer generates a key pair, signs a message (or its hash) with the private key to produce a signature, and the verifier checks the signature against the message and public key. Signatures are fixed-size outputs varying by security level: for level 2 (ML-DSA-44), public keys are 1312 bytes, private keys 2560 bytes, and signatures 2420 bytes; for 3 (ML-DSA-65), 1952, 4032, and 3309 bytes; for 5 (ML-DSA-87), 2592, 4896, and 4627 bytes.
 
 Use cases include signing software updates, certificates in PKI, or documents for non-repudiation, ensuring long-term security in scenarios like blockchain transactions or legal electronic signatures where quantum threats are a concern.
+
+| Security Level | Public Key (pk) | Private Key (sk) | Signature (sig) |
+|----------------|-----------------|------------------|-----------------|
+| 2 (ML-DSA-44) | 1312 bytes     | 2560 bytes      | 2420 bytes     |
+| 3 (ML-DSA-65) | 1952 bytes     | 4032 bytes      | 3309 bytes     |
+| 5 (ML-DSA-87) | 2592 bytes     | 4896 bytes      | 4627 bytes     |
+
 
 ### In Practice
 
