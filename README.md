@@ -1,10 +1,10 @@
-# GreenfieldPQC
+ï»¿# GreenfieldPQC
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NuGet Version](https://img.shields.io/nuget/v/GreenfieldPQC.svg)](https://www.nuget.org/packages/GreenfieldPQC/)  
 NuGet URL - https://www.nuget.org/packages/GreenfieldPQC  
 GitHub URL - https://github.com/JPKusumi/GreenfieldPQC
 
-## Quick Overview: Quantum Resistance Available Now  
+## Overview: Quantum Resistance Available Now  
 
 The world faces the threat of quantum computers with the ability to break current (or old normal) cryptographic systems. To use Post Quantum Cryptography (PQC) will become the new normal. GreenfieldPQC is a .NET library that provides post-quantum cryptographic primitives to secure applications against these future threats. It offers an opinionated subset drawn from available implementations of key encapsulation mechanisms (KEMs), symmetric encryption, digital signatures, and hashing algorithms designed to be resistant to quantum attacks. The goal is to sidestep threats like Grover's algorithm for symmetric ciphers and Shor's for asymmetric ones.  
 
@@ -14,7 +14,7 @@ Where the old normal was to use 256-bit keys and hashes, the new normal is to us
 
 Hence, a key feature of the new normal is that devs and storage systems must accomodate larger data sizes for keys and hashes. While 256 bits is 32 bytes, 512 bits is 64 bytes.  
 
-Package note. This package is best for green field development — new projects, not legacy systems. Corporate, legacy systems need more than code; database schemas may need to change, and they may choose to re-encrypt vulnerable data. Conversely, if you are on a green field project, then you can drop in this package and go. The name, GreenfieldPQC, indicates that brown field redevelopment on legacy systems is out of scope for this package.  
+Package note. This package is best for green field development ï¿½ new projects, not legacy systems. Corporate, legacy systems need more than code; database schemas may need to change, and they may choose to re-encrypt vulnerable data. Conversely, if you are on a green field project, then you can drop in this package and go. The name, GreenfieldPQC, indicates that brown field redevelopment on legacy systems is out of scope for this package.  
 
 Upon review, Grok has said, "This library is suitable for greenfield projects transitioning to the 'new normal' of quantum-safe cryptography."  
 
@@ -57,29 +57,29 @@ Console.WriteLine(Encoding.UTF8.GetString(decrypted)); // "Hello, PQC!"
 GreenfieldPQC enables "future-proof" encryption upgrades with minimal disruption, targeting quantum-resistant primitives for new ("greenfield") projects. Key benefits:  
 
 - **Quantum Resistance**: Kusumi512 offers 512-bit keys for symmetric encryption (effective 256-bit security post-Grover), outperforming Threefish-512 in benchmarks (7-9% faster execution, 40-58% less memory). Kyber and Dilithium are NIST-standardized for asymmetric needs.  
-- **Efficiency**: Optimized for .NET (C#), with low overhead—ideal for high-throughput apps like cloud services, IoT, or data pipelines.  
+- **Efficiency**: Optimized for .NET (C#), with low overheadï¿½ideal for high-throughput apps like cloud services, IoT, or data pipelines.  
 - **Ease of Adoption**: NuGet integration; bundles oqs.dll for native PQC support (via P/Invoke for Kyber and Dilithium); requires .NET 8+.  
 - **Risk Mitigation**: Addresses media "drumbeat" on quantum threats; supports compliance (e.g., FIPS-like standards pending NIST finalization).  
 - **Benchmarks Summary**: From BENCHMARKS.md (in repo root), Kusumi512 excels in speed and RAM vs. alternatives, making it a practical "new normal" for 512-bit symmetric crypto.  
 
-Evaluate via a proof-of-concept: Install the package and test Kusumi512 for your workload. For ROI, consider avoided breaches in a post-quantum world—contact NIST or consult [xAI's resources](https://x.ai) for broader AI/quantum insights.  
+Evaluate via a proof-of-concept: Install the package and test Kusumi512 for your workload. For ROI, consider avoided breaches in a post-quantum worldï¿½contact NIST or consult [xAI's resources](https://x.ai) for broader AI/quantum insights.  
 
 Resources:
-- **Cryptography Basics**: [Wikipedia: Cryptography](https://en.wikipedia.org/wiki/Cryptography) – A high-level intro to encryption concepts.  
-- **Symmetric vs. Asymmetric Encryption**: [Khan Academy: Cryptography](https://www.khanacademy.org/computing/computer-science/cryptography) – Free videos explaining keys, ciphers, and hashes.  
-- **Quantum Threats**: [NIST Post-Quantum Cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography) – Explains why quantum computers could break current encryption and the shift to PQC.  
-- **Quantum Computing Primer**: [IBM: What is Quantum Computing?](https://www.ibm.com/topics/quantum-computing) – Simple explanation of the "quantum threat" in news stories.  
-- **Why Larger Keys Matter**: [Cloudflare: Post-Quantum Cryptography](https://blog.cloudflare.com/post-quantum-cryptography/) – Real-world context on urgency without deep math.  
+- **Cryptography Basics**: [Wikipedia: Cryptography](https://en.wikipedia.org/wiki/Cryptography) ï¿½ A high-level intro to encryption concepts.  
+- **Symmetric vs. Asymmetric Encryption**: [Khan Academy: Cryptography](https://www.khanacademy.org/computing/computer-science/cryptography) ï¿½ Free videos explaining keys, ciphers, and hashes.  
+- **Quantum Threats**: [NIST Post-Quantum Cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography) ï¿½ Explains why quantum computers could break current encryption and the shift to PQC.  
+- **Quantum Computing Primer**: [IBM: What is Quantum Computing?](https://www.ibm.com/topics/quantum-computing) ï¿½ Simple explanation of the "quantum threat" in news stories.  
+- **Why Larger Keys Matter**: [Cloudflare: Post-Quantum Cryptography](https://blog.cloudflare.com/post-quantum-cryptography/) ï¿½ Real-world context on urgency without deep math.  
 
 ## End-to-End Example  
 
-Alice and Bob are old friends who love sharing secrets, but in this digital age, they're paranoid about eavesdroppers—like quantum computers that could one day crack traditional key exchanges. Alice wants to send Bob some confidential photos from their latest adventure, but she needs a super-secure way to encrypt them using her new favorite symmetric cipher, Kusumi512, which requires a 512-bit shared key. The problem? They don't have a secure way to agree on that key over the internet without someone intercepting it.
+Alice and Bob are old friends who love sharing secrets, but in this digital age, they're paranoid about eavesdroppersï¿½like quantum computers that could one day crack traditional key exchanges. Alice wants to send Bob some confidential photos from their latest adventure, but she needs a super-secure way to encrypt them using her new favorite symmetric cipher, Kusumi512, which requires a 512-bit shared key. The problem? They don't have a secure way to agree on that key over the internet without someone intercepting it.
 
 Enter Kyber, the post-quantum hero of key encapsulation mechanisms (KEMs). It's like a magical lockbox that's safe even from future quantum villains. Here's how their story unfolds:
 
-1. **Alice Prepares the Lockbox**: Alice generates a Kyber key pair on her computer—a public key (like an open lock anyone can see) and a private key (the secret code to unlock it). She sends the public key to Bob over the open internet. No worries if someone like Eve intercepts it; the public key is useless without the private one.
+1. **Alice Prepares the Lockbox**: Alice generates a Kyber key pair on her computerï¿½a public key (like an open lock anyone can see) and a private key (the secret code to unlock it). She sends the public key to Bob over the open internet. No worries if someone like Eve intercepts it; the public key is useless without the private one.
 
-2. **Bob Seals the Secret**: Bob receives Alice's public key and decides on a random shared secret (this will become their 512-bit Kusumi512 key). Using Kyber, he "encapsulates" this secret inside a ciphertext—a digital envelope sealed with Alice's public key. Only Alice can open it. Bob sends this ciphertext back to Alice.
+2. **Bob Seals the Secret**: Bob receives Alice's public key and decides on a random shared secret (this will become their 512-bit Kusumi512 key). Using Kyber, he "encapsulates" this secret inside a ciphertextï¿½a digital envelope sealed with Alice's public key. Only Alice can open it. Bob sends this ciphertext back to Alice.
 
 3. **Alice Unlocks the Secret**: Alice uses her private key to "decapsulate" the ciphertext, revealing the exact shared secret Bob chose. Now both Alice and Bob have the same 512-bit key, and Eve (even with a quantum computer) can't figure it out because Kyber's lattice-based math is too tricky for Shor's algorithm.
 
@@ -87,13 +87,13 @@ Enter Kyber, the post-quantum hero of key encapsulation mechanisms (KEMs). It's 
 
 5. **Bob Decrypts and Enjoys**: Bob uses the same shared Kusumi512 key to decrypt the photos and verify the Poly1305 tag. If everything checks out, he sees the images perfectly. If not, he knows something's fishy.
 
-In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approach—post-quantum key exchange plus symmetric encryption—is the gold standard for future-proofing, enabled by this GreenfieldPQC toolkit for .NET developers. If quantum threats escalate, they're ready!
+In the end, Alice and Bob's communication is quantum-safe from the start (thanks to Kyber) and blazing fast for the bulk data (thanks to Kusumi512's efficiency). This hybrid approachï¿½post-quantum key exchange plus symmetric encryptionï¿½is the gold standard for future-proofing, enabled by this GreenfieldPQC toolkit for .NET developers. If quantum threats escalate, they're ready!
 
 ### How to Implement the End-to-End Example  
 
 To implement the Alice and Bob scenario in C#, we'll use Kyber for quantum-safe key exchange, SHA512 to derive a 512-bit symmetric key from Kyber's 256-bit shared secret, and Kusumi512Poly1305 for authenticated bulk encryption (AEAD mode). This ensures confidentiality, integrity, and authenticity.  
 
-Assume Alice and Bob have a way to exchange data (e.g., via files or a network channel—out of scope here). We'll use level 1024 for Kyber (high security) and focus on synchronous methods for simplicity. Use using statements for disposal.  
+Assume Alice and Bob have a way to exchange data (e.g., via files or a network channelï¿½out of scope here). We'll use level 1024 for Kyber (high security) and focus on synchronous methods for simplicity. Use using statements for disposal.  
 
 #### Alice's Code (Generate Key Pair, Send Public Key, Receive Ciphertext, Derive Key, Encrypt Data)
 ```csharp
@@ -173,11 +173,11 @@ string decrypted = Encoding.UTF8.GetString(decryptedBytes);
 Console.WriteLine(decrypted);  // "Confidential photos data"
 ```
 **Notes:**  
-• Use secure channels for exchanges if possible, but Kyber ensures the shared secret is safe even over insecure ones.  
-• For files/streams: Replace byte arrays with EncryptStreamAsync/DecryptStreamAsync for large data like photos.  
-• Verify equality of shared secrets with CryptographicOperations.FixedTimeEquals in tests.  
-• Rotate nonces/keys per session; include timestamps in data for replay protection.  
-• Error handling: Wrap in try-catch for exceptions like invalid tags.  
+ï¿½ Use secure channels for exchanges if possible, but Kyber ensures the shared secret is safe even over insecure ones.  
+ï¿½ For files/streams: Replace byte arrays with EncryptStreamAsync/DecryptStreamAsync for large data like photos.  
+ï¿½ Verify equality of shared secrets with CryptographicOperations.FixedTimeEquals in tests.  
+ï¿½ Rotate nonces/keys per session; include timestamps in data for replay protection.  
+ï¿½ Error handling: Wrap in try-catch for exceptions like invalid tags.  
 
 ### Another Usage Example: Stream Encryption  
 ```csharp
@@ -191,24 +191,20 @@ await cipher.EncryptStreamAsync(input, output, progress: progress, nonceGenerato
 
 ## Kyber
 
-A post-quantum key encapsulation mechanism (KEM) formerly known as CRYSTALS-Kyber – its formal name has been changed to ML-KEM. ML-KEM is the standardized name adopted by NIST for Kyber. This renaming occurred as part of NIST's finalization of post-quantum cryptography standards in August 2024, where CRYSTALS-Kyber was selected and formalized as ML-KEM (Module-Lattice-Based Key-Encapsulation Mechanism) under FIPS 203.  
+Kyber is a post-quantum key encapsulation mechanism (KEM) standardized by NIST as ML-KEM (Module-Lattice-Based Key-Encapsulation Mechanism) under FIPS 203 in August 2024. It provides secure key exchange resistant to quantum attacks. In the GreenfieldPQC API, it is referred to as Kyber, with implementation details relying on P/Invoke to a native DLL from liboqs as a transitive dependency.
 
-In the developer API, we call it Kyber, but inside the GreenfieldPQC.dll, we use P/Invoke to call into a native dll for the ML-KEM implementation. If you are tracking dependencies, liboqs is a transitive dependency of GreenfieldPQC.  
+### In Theory
 
-Kyber yields a 32-byte secret that two parties share without that secret ever crossing the wire. It is a key encapsulation mechanism (KEM) that allows you to securely exchange keys in a post-quantum world.  
+A key encapsulation mechanism (KEM) is a cryptographic primitive that enables two parties to securely establish a shared secret key over an insecure channel without transmitting the key itself. Unlike traditional key exchange methods like Diffie-Hellman, which are vulnerable to quantum computers via Shor's algorithm, Kyber uses lattice-based problems that remain hard for quantum adversaries.
 
-Note that 32 bytes is 256 bits. If you hash that with SHA512, then you get a 512-bit digest, usable as a 512-bit encryption key for symmetric cryptography. Both parties can run the hash locally, and they will end up with the same key.  
+In practice, one party (the sender) uses the recipient's public key to generate a shared secret and a ciphertext (encapsulated key). The recipient then uses their private key to decapsulate the ciphertext and recover the same shared secret. The output is typically a 32-byte (256-bit) shared secret, which can be hashed (e.g., with SHA512) to derive longer symmetric keys. Key sizes vary by security level: for level 512, public keys are 800 bytes, private keys 1632 bytes, and ciphertexts 768 bytes; for 768, they are 1184, 2400, and 1088 bytes; for 1024, 1568, 3168, and 1568 bytes.
 
-Key and ciphertext sizes by security level (from FIPS 203):
+Common use cases include establishing session keys for secure communication protocols, replacing classical methods like ECDH in TLS handshakes, or bootstrapping symmetric encryption in hybrid cryptosystems. This ensures forward secrecy and quantum resistance for applications like secure messaging or VPNs.
 
-| Security Level | Public Key (pk) | Private Key (sk) | Ciphertext (ct) |
-|----------------|-----------------|------------------|-----------------|
-| 512           | 800 bytes      | 1632 bytes      | 768 bytes      |
-| 768           | 1184 bytes     | 2400 bytes      | 1088 bytes     |
-| 1024          | 1568 bytes     | 3168 bytes      | 1568 bytes     |
+### In Practice
 
 **API Highlights** (Security levels: 512, 768, 1024):
-- `CryptoFactory.CreateKyber(level)`: Returns IKeyEncapsulationMechanism instance (level: 512, 768, or 1024).
+- `CryptoFactory.CreateKyber(level)`: Returns IKeyEncapsulationMechanism instance.
 - `IKeyEncapsulationMechanism.GenerateKeyPair()`: Returns (publicKey, privateKey).
 - `IKeyEncapsulationMechanism.Encapsulate(byte[] publicKey)`: Returns (sharedSecret, ciphertext).
 - `IKeyEncapsulationMechanism.Decapsulate(byte[] ciphertext, byte[] privateKey)`: Returns sharedSecret.
@@ -227,22 +223,20 @@ byte[] ssReceiver = kem.Decapsulate(ct, sk);  // ssSender matches ssReceiver (us
 
 ## Dilithium
 
-A post-quantum digital signature algorithm originally known as CRYSTALS-Dilithium – its formal name has been changed to ML-DSA. ML-DSA is the standardized name adopted by NIST for Dilithium. This renaming occurred as part of NIST's finalization of post-quantum cryptography standards in August 2024, where CRYSTALS-Dilithium was selected and formalized as ML-DSA (Module-Lattice-Based Digital Signature Algorithm) under FIPS 204.  
+Dilithium is a post-quantum digital signature algorithm standardized by NIST as ML-DSA (Module-Lattice-Based Digital Signature Algorithm) under FIPS 204 in August 2024. It ensures message authenticity and integrity against quantum threats. In the GreenfieldPQC API, it is referred to as Dilithium, with implementation via P/Invoke to a native DLL from liboqs as a transitive dependency.
 
-In the developer API, we call it Dilithium, but inside the GreenfieldPQC.dll, we use P/Invoke to call into a native dll for the ML-DSA implementation. If you are tracking dependencies, liboqs is a transitive dependency of GreenfieldPQC.  
+### In Theory
 
-Dilithium is a digital signature algorithm that allows you to sign messages in a post-quantum world. It is designed to be secure against quantum attacks, making it suitable for long-term data integrity and authenticity.  
+A digital signature algorithm allows a signer to prove the authenticity and integrity of a message using a private key, while anyone with the corresponding public key can verify it. Dilithium, based on lattice problems, resists quantum attacks like those that break RSA or ECDSA with Shor's algorithm.
 
-Key and signature sizes by security level (from FIPS 204):
+In practice, the signer generates a key pair, signs a message (or its hash) with the private key to produce a signature, and the verifier checks the signature against the message and public key. Signatures are fixed-size outputs varying by security level: for level 2 (ML-DSA-44), public keys are 1312 bytes, private keys 2560 bytes, and signatures 2420 bytes; for 3 (ML-DSA-65), 1952, 4032, and 3309 bytes; for 5 (ML-DSA-87), 2592, 4896, and 4627 bytes.
 
-| Security Level | Public Key (pk) | Private Key (sk) | Signature (sig) |
-|----------------|-----------------|------------------|-----------------|
-| 2 (ML-DSA-44) | 1312 bytes     | 2560 bytes      | 2420 bytes     |
-| 3 (ML-DSA-65) | 1952 bytes     | 4032 bytes      | 3309 bytes     |
-| 5 (ML-DSA-87) | 2592 bytes     | 4896 bytes      | 4627 bytes     |
+Use cases include signing software updates, certificates in PKI, or documents for non-repudiation, ensuring long-term security in scenarios like blockchain transactions or legal electronic signatures where quantum threats are a concern.
+
+### In Practice
 
 **API Highlights** (Security levels: 2, 3, 5):
-- `CryptoFactory.CreateDilithium(level)`: Returns ISigner instance (level: 2, 3, or 5).
+- `CryptoFactory.CreateDilithium(level)`: Returns ISigner instance.
 - `ISigner.GenerateKeyPair()`: Returns (publicKey, privateKey).
 - `ISigner.Sign(byte[] message, byte[] privateKey)`: Returns signature.
 - `ISigner.Verify(byte[] message, byte[] signature, byte[] publicKey)`: Returns bool.
@@ -263,15 +257,17 @@ bool valid = signer.Verify(message, sig, pubKey);  // true
 
 ## Kusumi512
 
-Kusumi512 is a post-quantum symmetric encryption algorithm that is designed to be secure against quantum attacks. It is a 512-bit key algorithm, meaning it uses a 512-bit key for encryption and decryption. This provides a high level of security, making it suitable for protecting sensitive data in a post-quantum world.
+Kusumi512 is a post-quantum symmetric encryption algorithm using a 512-bit key, designed for efficiency and resistance to quantum attacks like Grover's algorithm. It operates as a stream cipher with a 64-bit block counter, suitable for encrypting large or streaming data.
 
-Kusumi512 is a symmetric encryption algorithm, meaning it uses the same key for both encryption and decryption. This is in contrast to asymmetric algorithms like Kyber and Dilithium, which use different keys for encryption and decryption.
+### In Theory
 
-Kusumi512 is designed to be efficient and secure, making it a good choice for applications that require strong encryption in a post-quantum environment.
+Symmetric encryption uses the same key for both encryption and decryption, providing confidentiality by transforming plaintext into ciphertext that appears random without the key. Kusumi512, as a stream cipher, generates a keystream from the key and nonce, XORing it with the data for encryption (and decryption, since XOR is reversible).
 
-It is also a stream cipher and boasts a 64-bit block counter. This makes it suitable to encrypt and decrypt streams, including long ones*.
+In practice, inputs include a 64-byte key, a 12-byte nonce, and plaintext of any length; outputs are ciphertext of matching length. The 64-bit counter prevents nonce reuse issues over long streams, avoiding resets needed with shorter counters (e.g., in 4K video streaming, a 32-bit counter might require daily resets).
 
-(*If you stream 4K video and depend on a 32-bit block counter, you may need to reset your system in less than 72 hours; often daily, or every other day.)
+Use cases involve securing data at rest (e.g., file encryption) or in transit (e.g., streaming media), especially where high throughput is needed in quantum-safe environments like cloud storage or real-time communications.
+
+### In Practice
 
 **API Highlights**:
 - `CryptoFactory.CreateKusumi512(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 12 bytes).
@@ -304,11 +300,17 @@ byte[] decrypted = cipher.Decrypt(ciphertext);  // Matches plaintext
 
 ## Kusumi512Poly1305
 
-Kusumi512Poly1305 is an authenticated encryption with associated data (AEAD) mode that combines the Kusumi512 symmetric cipher with the Poly1305 message authentication code (MAC). This integration provides both confidentiality (via encryption) and integrity/authenticity (via MAC), ensuring that encrypted data cannot be tampered with undetected.
+Kusumi512Poly1305 is an authenticated encryption with associated data (AEAD) scheme combining Kusumi512 for confidentiality with Poly1305 for integrity, using a 512-bit key for post-quantum security.
 
-Like Kusumi512, it uses a 512-bit key and is designed for post-quantum security, offering resistance against quantum threats such as Grover's algorithm. It is particularly useful for secure messaging, file storage, or any scenario where data integrity is as critical as secrecy.
+### In Theory
 
-In the developer API, Kusumi512Poly1305 supports streaming operations and is efficient for high-throughput applications, aligning with the performance advantages seen in Kusumi512 benchmarks.
+AEAD primitives provide both encryption (confidentiality) and authentication (integrity and authenticity), detecting tampering or forgery. Kusumi512Poly1305 encrypts data while appending a MAC tag computed over the ciphertext.
+
+In practice, inputs are a 64-byte key, 12-byte nonce, and plaintext; outputs include ciphertext plus a 16-byte tag. Decryption verifies the tag before returning plaintext, throwing an exception on failure. This prevents attacks like chosen-ciphertext or replay.
+
+Use cases include secure messaging or file storage, where detecting modifications is crucial, such as in quantum-resistant protocols for IoT or financial transactions.
+
+### In Practice
 
 **API Highlights**:
 - `CryptoFactory.CreateKusumi512Poly1305(byte[] key, byte[] nonce)`: Creates an `ISymmetricCipher` instance (key: 64 bytes, nonce: 12 bytes).
@@ -334,11 +336,17 @@ byte[] decrypted = cipher.Decrypt(ciphertextWithTag);  // Matches plaintext
 
 ## SHA256
 
-SHA256 is a cryptographic hash function from the SHA-2 family that produces a 256-bit (32-byte) fixed-size digest from input data of any size. It is widely used for data integrity verification, digital signatures, and as a building block in key derivation functions.
+SHA256 is a cryptographic hash function from the SHA-2 family, producing a 256-bit digest. In GreenfieldPQC, it uses .NET's System.Security.Cryptography for compatibility, serving as a building block in hybrid post-quantum systems.
 
-In the context of the GreenfieldPQC toolkit, SHA256 serves as a reliable "old normal" hash for scenarios where a 256-bit output is sufficient, such as hashing messages before signing with Dilithium or deriving intermediate values. While quantum computers may reduce its effective security via Grover's algorithm, it remains suitable for many applications when combined with post-quantum primitives, especially as a faster alternative to SHA512 for non-key-derivation tasks.
+### In Theory
 
-The implementation leverages .NET's built-in System.Security.Cryptography for efficiency and compatibility.
+A hash function maps arbitrary input data to a fixed-size output (digest), ensuring that small changes in input produce vastly different outputs (avalanche effect). SHA256 is collision-resistant and preimage-resistant, though quantum computers reduce its effective security to about 128 bits via Grover's algorithm.
+
+In practice, input is any byte array or stream; output is always 32 bytes. It's deterministic, so the same input always yields the same hash, enabling verification without storing originals.
+
+Use cases include integrity checks (e.g., file downloads), message digests for signing with Dilithium, or password storage (with salting), often in workflows needing faster hashing than SHA512.
+
+### In Practice
 
 **API Highlights**:
 - `CryptoFactory.CreateSHA256()`: Returns reusable SHA256 instance.
@@ -353,11 +361,17 @@ byte[] hash = sha256.ComputeHash(data);  // Or sha256.ComputeHash(stream)
 
 ## SHA512
 
-SHA512 is a cryptographic hash function from the SHA-2 family that generates a 512-bit (64-byte) fixed-size digest. It offers higher security margins than SHA256, making it ideal for deriving longer keys or handling larger security requirements.
+SHA512 is a cryptographic hash function from the SHA-2 family, producing a 512-bit digest. In GreenfieldPQC, it leverages .NET's System.Security.Cryptography, ideal for deriving longer keys in post-quantum contexts.
 
-Within GreenfieldPQC, SHA512 is particularly valuable for post-quantum workflows, such as hashing Kyber's 256-bit shared secret to produce a 512-bit key for Kusumi512 encryption. This ensures both parties can independently derive the same symmetric key without transmission. Its quantum resistance stems from the hash length, providing effective 256-bit security against Grover's algorithm for preimage attacks.
+### In Theory
 
-Like SHA256, it uses .NET's native System.Security.Cryptography implementation for optimal performance and seamless integration.
+Hash functions like SHA512 provide a one-way transformation of data into a fixed digest, supporting integrity, authentication, and key derivation. With a longer output, it offers about 256-bit effective security against quantum preimage attacks via Grover's algorithm.
+
+In practice, input can be any data; output is 64 bytes. It's used to expand shorter secrets (e.g., Kyber's 32-byte shared secret) into symmetric keys.
+
+Use cases involve key derivation (e.g., hashing KEM outputs for Kusumi512), digital fingerprints for large files, or in HMAC for message authentication, ensuring robustness in quantum-hybrid cryptosystems.
+
+### In Practice
 
 **API Highlights**:
 - `CryptoFactory.CreateSHA512()`: Returns reusable SHA512 instance.
