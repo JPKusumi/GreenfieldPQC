@@ -204,5 +204,5 @@ The cryptography community (h/t Daniel J. Bernstein) should be thanked for the i
 ## Author's Address
 
 John Kusumi  
-Email: john.kusumi@proton.me  
+Email: john.kusumi@greenfieldpqc.com
 
