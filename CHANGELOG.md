@@ -5,6 +5,8 @@ All notable changes to GreenfieldPQC will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+As of August 30, 2025, a test vector in the TECHNICAL_SPEC.md was updated.
+
 As of August 6, 2025, the README improved again.
 
 As of July 31, 2025, the README has been substantially reworked and updated.
