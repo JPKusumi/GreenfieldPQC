@@ -31,9 +31,9 @@ For more commentary from Grok, see REVIEW.md and BENCHMARKS.md in the repo root.
 
 Via NuGet:
 ```
-dotnet add package GreenfieldPQC
+dotnet add package GreenfieldPQC --version 1.0.2
 ```
-Requires .NET 8.0+. Bundles oqs.dll, a native dll, as a transitive dependency for supported platforms (win/linux/osx, x64/arm64). No additional configuration needed. Note that win-arm64 is not a supported platform.  
+Supports .NET 8+ and .NET 10. Bundles oqs.dll, a native dll, as a transitive dependency for supported platforms (win/linux/osx, x64/arm64). No additional configuration needed. Note that win-arm64 is not a supported platform.  
 
 ## Quick Start
 ```csharp
