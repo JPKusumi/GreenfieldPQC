@@ -12,14 +12,14 @@ namespace GreenfieldPQC.Benchmarks
     [RPlotExporter] // Exports plots
     public class CipherBenchmarks
     {
-        private byte[] _key;
-        private byte[] _nonce;
-        private byte[] _originalData1KB;
-        private byte[] _originalData1MB;
-        private byte[] _buffer1KB;
-        private byte[] _buffer1MB;
-        private ISymmetricCipher _kusumi512;
-        private string logPath;
+        private byte[]? _key;
+        private byte[]? _nonce;
+        private byte[]? _originalData1KB;
+        private byte[]? _originalData1MB;
+        private byte[]? _buffer1KB;
+        private byte[]? _buffer1MB;
+        private ISymmetricCipher? _kusumi512;
+        private string? logPath;
 
         [GlobalSetup]
         public void GlobalSetup()

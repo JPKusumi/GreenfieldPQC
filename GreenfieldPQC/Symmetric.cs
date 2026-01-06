@@ -26,6 +26,13 @@ namespace GreenfieldPQC.Cryptography
         private readonly byte[] _keystreamBuffer = new byte[100]; // Reusable buffer
 
         private static readonly bool IsAvx2Supported = Avx2.IsSupported;
+        private static readonly bool IsAvx512Supported = Avx512F.IsSupported;
+
+        #if DEBUG || BENCHMARK
+        public static bool ForceUseAvx512 { get; set; } = false;
+        public static bool ForceUseAvx2Only { get; set; } = false;
+        public static bool ForceScalarOnly { get; set; } = false;
+        #endif
 
         public Kusumi512(byte[] key, byte[] nonce) : base(key, nonce)
         {
@@ -221,14 +228,36 @@ namespace GreenfieldPQC.Cryptography
             // Copy to working state
             _startState.AsSpan().CopyTo(_workingState);
 
-            // 10 rounds (reduced for perf, secure margin ~ChaCha12)
-            if (IsAvx2Supported)
+            // 10 rounds
+            #if DEBUG || BENCHMARK
+            if (ForceUseAvx512 && IsAvx512Supported)
+            {
+                Kusumi512Avx512Helper.Kusumi512CoreAvx512(ref _workingState);
+            }
+            else if (ForceUseAvx2Only && IsAvx2Supported)
             {
                 Kusumi512CoreAvx2();
             }
-            else
+            else if (ForceScalarOnly)
             {
                 Kusumi512CoreScalar();
+            }
+            else
+            #endif
+            {
+                // Normal production path
+                if (IsAvx512Supported)
+                {
+                    Kusumi512Avx512Helper.Kusumi512CoreAvx512(ref _workingState);
+                }
+                else if (IsAvx2Supported)
+                {
+                    Kusumi512CoreAvx2();
+                }
+                else
+                {
+                    Kusumi512CoreScalar();
+                }
             }
 
             // Add original state and serialize keystream
@@ -287,9 +316,9 @@ namespace GreenfieldPQC.Cryptography
                 d = Vector128.Create(_workingState[12], _workingState[13], _workingState[14], _workingState[15]);
 
                 // Shuffle for diagonal (left rotates)
-                byte controlLeft1 = 0x39; // pos0 from1, pos1 from2, pos2 from3, pos3 from0
-                byte controlLeft2 = 0x4E; // pos0 from2, pos1 from3, pos2 from0, pos3 from1
-                byte controlLeft3 = 0x93; // pos0 from3, pos1 from0, pos2 from1, pos3 from2
+                const byte controlLeft1 = 0x39; // pos0 from1, pos1 from2, pos2 from3, pos3 from0
+                const byte controlLeft2 = 0x4E; // pos0 from2, pos1 from3, pos2 from0, pos3 from1
+                const byte controlLeft3 = 0x93; // pos0 from3, pos1 from0, pos2 from1, pos3 from2
 
                 Vector128<uint> b_rot = Sse2.Shuffle(b.AsInt32(), controlLeft1).AsUInt32();
                 Vector128<uint> c_rot = Sse2.Shuffle(c.AsInt32(), controlLeft2).AsUInt32();
@@ -312,9 +341,9 @@ namespace GreenfieldPQC.Cryptography
                 b_rot = Sse2.Or(Sse2.ShiftLeftLogical(b_rot, 7), Sse2.ShiftRightLogical(b_rot, 25));
 
                 // Unshuffle (right rotates = inverse)
-                byte controlRight1 = 0x93; // inverse of left1
-                byte controlRight2 = 0x4E; // self-inverse
-                byte controlRight3 = 0x39; // inverse of left3
+                const byte controlRight1 = 0x93; // inverse of left1
+                const byte controlRight2 = 0x4E; // self-inverse
+                const byte controlRight3 = 0x39; // inverse of left3
 
                 b = Sse2.Shuffle(b_rot.AsInt32(), controlRight1).AsUInt32();
                 c = Sse2.Shuffle(c_rot.AsInt32(), controlRight2).AsUInt32();

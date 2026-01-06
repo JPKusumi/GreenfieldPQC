@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks-20260105-225327</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6466/22H2/2022Update)
+11th Gen Intel Core i9-11900H 2.50GHz, 1 CPU, 16 logical and 8 physical cores
+.NET SDK 10.0.101
+  [Host]   : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+  .NET 8.0 : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+</code></pre>
+<pre><code>Job=.NET 8.0  Runtime=.NET 8.0  InvocationCount=1  
+UnrollFactor=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method  </th><th>DataSize</th><th>Mode  </th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen0</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>EncryptInPlace</td><td>1048576</td><td>KusumiAVX512</td><td>8.915 ms</td><td>0.1403 ms</td><td>0.1244 ms</td><td>-</td><td>-</td>
+</tr><tr><td>EncryptInPlace</td><td>1048576</td><td>KusumiAVX2</td><td>9.424 ms</td><td>0.1851 ms</td><td>0.1981 ms</td><td>-</td><td>-</td>
+</tr><tr><td>EncryptInPlace</td><td>1048576</td><td>KusumiScalar</td><td>8.997 ms</td><td>0.1596 ms</td><td>0.1493 ms</td><td>-</td><td>-</td>
+</tr><tr><td>EncryptInPlace</td><td>1048576</td><td>Threefish</td><td>7.027 ms</td><td>0.1367 ms</td><td>0.1628 ms</td><td>-</td><td>1441792 B</td>
+</tr><tr><td>EncryptInPlace</td><td>16777216</td><td>KusumiAVX512</td><td>129.914 ms</td><td>0.6278 ms</td><td>0.4901 ms</td><td>-</td><td>-</td>
+</tr><tr><td>EncryptInPlace</td><td>16777216</td><td>KusumiAVX2</td><td>129.472 ms</td><td>2.0018 ms</td><td>1.6716 ms</td><td>-</td><td>-</td>
+</tr><tr><td>EncryptInPlace</td><td>16777216</td><td>KusumiScalar</td><td>126.040 ms</td><td>2.4404 ms</td><td>2.1633 ms</td><td>-</td><td>-</td>
+</tr><tr><td>EncryptInPlace</td><td>16777216</td><td>Threefish</td><td>108.988 ms</td><td>1.8926 ms</td><td>1.6777 ms</td><td>1000.0000</td><td>23068672 B</td>
+</tr></tbody></table>
+</body>
+</html>

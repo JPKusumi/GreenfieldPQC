@@ -1,0 +1,1003 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 8 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet  restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1/" /p:OutDir="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0/" /p:OutputPath="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0/" /p:PublishDir="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\publish/" in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1
+// command took 0.99 sec and exited with 0
+// start dotnet  build -c Release --no-restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1/" /p:OutDir="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0/" /p:OutputPath="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0/" /p:PublishDir="C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\publish/" --output "C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0/" in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1
+// command took 6.75 sec and exited with 0
+// ***** Done, took 00:00:07 (7.82 sec)   *****
+// Found 8 benchmarks:
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiAVX512]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiAVX2]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiScalar]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=Threefish]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiAVX512]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiAVX2]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiScalar]
+//   KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=Threefish]
+
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiAVX512]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 1352 1288 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 1048576, Mode: KusumiAVX512)" --job ".NET 8.0" --benchmarkId 0 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 84600.00 ns, 84.6000 us/op
+WorkloadJitting  1: 1 op, 13477400.00 ns, 13.4774 ms/op
+
+OverheadWarmup   1: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   2: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   3: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   4: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   6: 1 op, 200.00 ns, 200.0000 ns/op
+
+OverheadActual   1: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   2: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   6: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   9: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  10: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  11: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  12: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  13: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  14: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  15: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  16: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  17: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  18: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  19: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  20: 1 op, 100.00 ns, 100.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 8812800.00 ns, 8.8128 ms/op
+WorkloadWarmup   2: 1 op, 8808900.00 ns, 8.8089 ms/op
+WorkloadWarmup   3: 1 op, 8547500.00 ns, 8.5475 ms/op
+WorkloadWarmup   4: 1 op, 8540400.00 ns, 8.5404 ms/op
+WorkloadWarmup   5: 1 op, 9255000.00 ns, 9.2550 ms/op
+WorkloadWarmup   6: 1 op, 8889100.00 ns, 8.8891 ms/op
+WorkloadWarmup   7: 1 op, 9007600.00 ns, 9.0076 ms/op
+WorkloadWarmup   8: 1 op, 8924600.00 ns, 8.9246 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 8776200.00 ns, 8.7762 ms/op
+WorkloadActual   2: 1 op, 8778400.00 ns, 8.7784 ms/op
+WorkloadActual   3: 1 op, 8849700.00 ns, 8.8497 ms/op
+WorkloadActual   4: 1 op, 8651100.00 ns, 8.6511 ms/op
+WorkloadActual   5: 1 op, 8978700.00 ns, 8.9787 ms/op
+WorkloadActual   6: 1 op, 8880400.00 ns, 8.8804 ms/op
+WorkloadActual   7: 1 op, 8923900.00 ns, 8.9239 ms/op
+WorkloadActual   8: 1 op, 8874200.00 ns, 8.8742 ms/op
+WorkloadActual   9: 1 op, 8949800.00 ns, 8.9498 ms/op
+WorkloadActual  10: 1 op, 9203800.00 ns, 9.2038 ms/op
+WorkloadActual  11: 1 op, 8981100.00 ns, 8.9811 ms/op
+WorkloadActual  12: 1 op, 9102900.00 ns, 9.1029 ms/op
+WorkloadActual  13: 1 op, 8969700.00 ns, 8.9697 ms/op
+WorkloadActual  14: 1 op, 9090100.00 ns, 9.0901 ms/op
+WorkloadActual  15: 1 op, 9002800.00 ns, 9.0028 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 8776100.00 ns, 8.7761 ms/op
+WorkloadResult   2: 1 op, 8778300.00 ns, 8.7783 ms/op
+WorkloadResult   3: 1 op, 8849600.00 ns, 8.8496 ms/op
+WorkloadResult   4: 1 op, 8651000.00 ns, 8.6510 ms/op
+WorkloadResult   5: 1 op, 8978600.00 ns, 8.9786 ms/op
+WorkloadResult   6: 1 op, 8880300.00 ns, 8.8803 ms/op
+WorkloadResult   7: 1 op, 8923800.00 ns, 8.9238 ms/op
+WorkloadResult   8: 1 op, 8874100.00 ns, 8.8741 ms/op
+WorkloadResult   9: 1 op, 8949700.00 ns, 8.9497 ms/op
+WorkloadResult  10: 1 op, 8981000.00 ns, 8.9810 ms/op
+WorkloadResult  11: 1 op, 9102800.00 ns, 9.1028 ms/op
+WorkloadResult  12: 1 op, 8969600.00 ns, 8.9696 ms/op
+WorkloadResult  13: 1 op, 9090000.00 ns, 9.0900 ms/op
+WorkloadResult  14: 1 op, 9002700.00 ns, 9.0027 ms/op
+// GC:  0 0 0 0 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 26100 has exited with code 0.
+
+Mean = 8.915 ms, StdErr = 0.033 ms (0.37%), N = 14, StdDev = 0.124 ms
+Min = 8.651 ms, Q1 = 8.856 ms, Median = 8.937 ms, Q3 = 8.980 ms, Max = 9.103 ms
+IQR = 0.125 ms, LowerFence = 8.669 ms, UpperFence = 9.167 ms
+ConfidenceInterval = [8.775 ms; 9.055 ms] (CI 99.9%), Margin = 0.140 ms (1.57% of Mean)
+Skewness = -0.39, Kurtosis = 2.35, MValue = 2
+
+// ** Remained 7 (87.5%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiAVX2]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2084 2208 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 1048576, Mode: KusumiAVX2)" --job ".NET 8.0" --benchmarkId 1 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 83800.00 ns, 83.8000 us/op
+WorkloadJitting  1: 1 op, 13336400.00 ns, 13.3364 ms/op
+
+OverheadWarmup   1: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   2: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   3: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   4: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   6: 1 op, 0.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   2: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   3: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   6: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   9: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  10: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  11: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  12: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  13: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  14: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  15: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  16: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  17: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  18: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  19: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  20: 1 op, 100.00 ns, 100.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 9657300.00 ns, 9.6573 ms/op
+WorkloadWarmup   2: 1 op, 9429500.00 ns, 9.4295 ms/op
+WorkloadWarmup   3: 1 op, 9162100.00 ns, 9.1621 ms/op
+WorkloadWarmup   4: 1 op, 9466300.00 ns, 9.4663 ms/op
+WorkloadWarmup   5: 1 op, 9391100.00 ns, 9.3911 ms/op
+WorkloadWarmup   6: 1 op, 9462200.00 ns, 9.4622 ms/op
+WorkloadWarmup   7: 1 op, 9424000.00 ns, 9.4240 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 9477100.00 ns, 9.4771 ms/op
+WorkloadActual   2: 1 op, 9513600.00 ns, 9.5136 ms/op
+WorkloadActual   3: 1 op, 9399100.00 ns, 9.3991 ms/op
+WorkloadActual   4: 1 op, 9384200.00 ns, 9.3842 ms/op
+WorkloadActual   5: 1 op, 9798500.00 ns, 9.7985 ms/op
+WorkloadActual   6: 1 op, 9698500.00 ns, 9.6985 ms/op
+WorkloadActual   7: 1 op, 9330000.00 ns, 9.3300 ms/op
+WorkloadActual   8: 1 op, 8948600.00 ns, 8.9486 ms/op
+WorkloadActual   9: 1 op, 9265300.00 ns, 9.2653 ms/op
+WorkloadActual  10: 1 op, 9540300.00 ns, 9.5403 ms/op
+WorkloadActual  11: 1 op, 9414400.00 ns, 9.4144 ms/op
+WorkloadActual  12: 1 op, 9373800.00 ns, 9.3738 ms/op
+WorkloadActual  13: 1 op, 9413800.00 ns, 9.4138 ms/op
+WorkloadActual  14: 1 op, 9571900.00 ns, 9.5719 ms/op
+WorkloadActual  15: 1 op, 9646100.00 ns, 9.6461 ms/op
+WorkloadActual  16: 1 op, 9437700.00 ns, 9.4377 ms/op
+WorkloadActual  17: 1 op, 9175500.00 ns, 9.1755 ms/op
+WorkloadActual  18: 1 op, 9253300.00 ns, 9.2533 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 9477000.00 ns, 9.4770 ms/op
+WorkloadResult   2: 1 op, 9513500.00 ns, 9.5135 ms/op
+WorkloadResult   3: 1 op, 9399000.00 ns, 9.3990 ms/op
+WorkloadResult   4: 1 op, 9384100.00 ns, 9.3841 ms/op
+WorkloadResult   5: 1 op, 9798400.00 ns, 9.7984 ms/op
+WorkloadResult   6: 1 op, 9698400.00 ns, 9.6984 ms/op
+WorkloadResult   7: 1 op, 9329900.00 ns, 9.3299 ms/op
+WorkloadResult   8: 1 op, 8948500.00 ns, 8.9485 ms/op
+WorkloadResult   9: 1 op, 9265200.00 ns, 9.2652 ms/op
+WorkloadResult  10: 1 op, 9540200.00 ns, 9.5402 ms/op
+WorkloadResult  11: 1 op, 9414300.00 ns, 9.4143 ms/op
+WorkloadResult  12: 1 op, 9373700.00 ns, 9.3737 ms/op
+WorkloadResult  13: 1 op, 9413700.00 ns, 9.4137 ms/op
+WorkloadResult  14: 1 op, 9571800.00 ns, 9.5718 ms/op
+WorkloadResult  15: 1 op, 9646000.00 ns, 9.6460 ms/op
+WorkloadResult  16: 1 op, 9437600.00 ns, 9.4376 ms/op
+WorkloadResult  17: 1 op, 9175400.00 ns, 9.1754 ms/op
+WorkloadResult  18: 1 op, 9253200.00 ns, 9.2532 ms/op
+// GC:  0 0 0 0 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 32844 has exited with code 0.
+
+Mean = 9.424 ms, StdErr = 0.047 ms (0.50%), N = 18, StdDev = 0.198 ms
+Min = 8.948 ms, Q1 = 9.341 ms, Median = 9.414 ms, Q3 = 9.534 ms, Max = 9.798 ms
+IQR = 0.193 ms, LowerFence = 9.052 ms, UpperFence = 9.823 ms
+ConfidenceInterval = [9.239 ms; 9.610 ms] (CI 99.9%), Margin = 0.185 ms (1.96% of Mean)
+Skewness = -0.31, Kurtosis = 3.07, MValue = 2
+
+// ** Remained 6 (75.0%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiScalar]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2064 1352 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 1048576, Mode: KusumiScalar)" --job ".NET 8.0" --benchmarkId 2 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 101000.00 ns, 101.0000 us/op
+WorkloadJitting  1: 1 op, 14236700.00 ns, 14.2367 ms/op
+
+OverheadWarmup   1: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   2: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   3: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   4: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   6: 1 op, 100.00 ns, 100.0000 ns/op
+
+OverheadActual   1: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   2: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   6: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   9: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  10: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  11: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  12: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  13: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  14: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  15: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  16: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  17: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  18: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  19: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  20: 1 op, 200.00 ns, 200.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 9602700.00 ns, 9.6027 ms/op
+WorkloadWarmup   2: 1 op, 9056300.00 ns, 9.0563 ms/op
+WorkloadWarmup   3: 1 op, 9119400.00 ns, 9.1194 ms/op
+WorkloadWarmup   4: 1 op, 8853300.00 ns, 8.8533 ms/op
+WorkloadWarmup   5: 1 op, 9146000.00 ns, 9.1460 ms/op
+WorkloadWarmup   6: 1 op, 9126500.00 ns, 9.1265 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 8723400.00 ns, 8.7234 ms/op
+WorkloadActual   2: 1 op, 8885900.00 ns, 8.8859 ms/op
+WorkloadActual   3: 1 op, 8970800.00 ns, 8.9708 ms/op
+WorkloadActual   4: 1 op, 8877900.00 ns, 8.8779 ms/op
+WorkloadActual   5: 1 op, 8974700.00 ns, 8.9747 ms/op
+WorkloadActual   6: 1 op, 8938900.00 ns, 8.9389 ms/op
+WorkloadActual   7: 1 op, 8831800.00 ns, 8.8318 ms/op
+WorkloadActual   8: 1 op, 8910500.00 ns, 8.9105 ms/op
+WorkloadActual   9: 1 op, 9030300.00 ns, 9.0303 ms/op
+WorkloadActual  10: 1 op, 8938400.00 ns, 8.9384 ms/op
+WorkloadActual  11: 1 op, 9230100.00 ns, 9.2301 ms/op
+WorkloadActual  12: 1 op, 9188200.00 ns, 9.1882 ms/op
+WorkloadActual  13: 1 op, 9201500.00 ns, 9.2015 ms/op
+WorkloadActual  14: 1 op, 9114500.00 ns, 9.1145 ms/op
+WorkloadActual  15: 1 op, 9139000.00 ns, 9.1390 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 8723300.00 ns, 8.7233 ms/op
+WorkloadResult   2: 1 op, 8885800.00 ns, 8.8858 ms/op
+WorkloadResult   3: 1 op, 8970700.00 ns, 8.9707 ms/op
+WorkloadResult   4: 1 op, 8877800.00 ns, 8.8778 ms/op
+WorkloadResult   5: 1 op, 8974600.00 ns, 8.9746 ms/op
+WorkloadResult   6: 1 op, 8938800.00 ns, 8.9388 ms/op
+WorkloadResult   7: 1 op, 8831700.00 ns, 8.8317 ms/op
+WorkloadResult   8: 1 op, 8910400.00 ns, 8.9104 ms/op
+WorkloadResult   9: 1 op, 9030200.00 ns, 9.0302 ms/op
+WorkloadResult  10: 1 op, 8938300.00 ns, 8.9383 ms/op
+WorkloadResult  11: 1 op, 9230000.00 ns, 9.2300 ms/op
+WorkloadResult  12: 1 op, 9188100.00 ns, 9.1881 ms/op
+WorkloadResult  13: 1 op, 9201400.00 ns, 9.2014 ms/op
+WorkloadResult  14: 1 op, 9114400.00 ns, 9.1144 ms/op
+WorkloadResult  15: 1 op, 9138900.00 ns, 9.1389 ms/op
+// GC:  0 0 0 0 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 31476 has exited with code 0.
+
+Mean = 8.997 ms, StdErr = 0.039 ms (0.43%), N = 15, StdDev = 0.149 ms
+Min = 8.723 ms, Q1 = 8.898 ms, Median = 8.971 ms, Q3 = 9.127 ms, Max = 9.230 ms
+IQR = 0.229 ms, LowerFence = 8.555 ms, UpperFence = 9.469 ms
+ConfidenceInterval = [8.837 ms; 9.157 ms] (CI 99.9%), Margin = 0.160 ms (1.77% of Mean)
+Skewness = 0.07, Kurtosis = 1.8, MValue = 2
+
+// ** Remained 5 (62.5%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=Threefish]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2064 2208 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 1048576, Mode: Threefish)" --job ".NET 8.0" --benchmarkId 3 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 86600.00 ns, 86.6000 us/op
+WorkloadJitting  1: 1 op, 34294100.00 ns, 34.2941 ms/op
+
+OverheadWarmup   1: 1 op, 400.00 ns, 400.0000 ns/op
+OverheadWarmup   2: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   4: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   5: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   6: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   7: 1 op, 100.00 ns, 100.0000 ns/op
+
+OverheadActual   1: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   2: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   4: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   6: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   9: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  10: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  11: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadActual  12: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  13: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  14: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  15: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  16: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  17: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  18: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  19: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  20: 1 op, 100.00 ns, 100.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 33139500.00 ns, 33.1395 ms/op
+WorkloadWarmup   2: 1 op, 33263700.00 ns, 33.2637 ms/op
+WorkloadWarmup   3: 1 op, 33291500.00 ns, 33.2915 ms/op
+WorkloadWarmup   4: 1 op, 33326900.00 ns, 33.3269 ms/op
+WorkloadWarmup   5: 1 op, 33318400.00 ns, 33.3184 ms/op
+WorkloadWarmup   6: 1 op, 33545100.00 ns, 33.5451 ms/op
+WorkloadWarmup   7: 1 op, 7800400.00 ns, 7.8004 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 7330700.00 ns, 7.3307 ms/op
+WorkloadActual   2: 1 op, 6977600.00 ns, 6.9776 ms/op
+WorkloadActual   3: 1 op, 7150600.00 ns, 7.1506 ms/op
+WorkloadActual   4: 1 op, 7101300.00 ns, 7.1013 ms/op
+WorkloadActual   5: 1 op, 7076900.00 ns, 7.0769 ms/op
+WorkloadActual   6: 1 op, 7155300.00 ns, 7.1553 ms/op
+WorkloadActual   7: 1 op, 7095700.00 ns, 7.0957 ms/op
+WorkloadActual   8: 1 op, 7158800.00 ns, 7.1588 ms/op
+WorkloadActual   9: 1 op, 7129700.00 ns, 7.1297 ms/op
+WorkloadActual  10: 1 op, 7252700.00 ns, 7.2527 ms/op
+WorkloadActual  11: 1 op, 7009300.00 ns, 7.0093 ms/op
+WorkloadActual  12: 1 op, 7115700.00 ns, 7.1157 ms/op
+WorkloadActual  13: 1 op, 6866200.00 ns, 6.8662 ms/op
+WorkloadActual  14: 1 op, 6827300.00 ns, 6.8273 ms/op
+WorkloadActual  15: 1 op, 6777400.00 ns, 6.7774 ms/op
+WorkloadActual  16: 1 op, 6845100.00 ns, 6.8451 ms/op
+WorkloadActual  17: 1 op, 7025700.00 ns, 7.0257 ms/op
+WorkloadActual  18: 1 op, 6750400.00 ns, 6.7504 ms/op
+WorkloadActual  19: 1 op, 6779800.00 ns, 6.7798 ms/op
+WorkloadActual  20: 1 op, 7070400.00 ns, 7.0704 ms/op
+WorkloadActual  21: 1 op, 7082300.00 ns, 7.0823 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 7330600.00 ns, 7.3306 ms/op
+WorkloadResult   2: 1 op, 6977500.00 ns, 6.9775 ms/op
+WorkloadResult   3: 1 op, 7150500.00 ns, 7.1505 ms/op
+WorkloadResult   4: 1 op, 7101200.00 ns, 7.1012 ms/op
+WorkloadResult   5: 1 op, 7076800.00 ns, 7.0768 ms/op
+WorkloadResult   6: 1 op, 7155200.00 ns, 7.1552 ms/op
+WorkloadResult   7: 1 op, 7095600.00 ns, 7.0956 ms/op
+WorkloadResult   8: 1 op, 7158700.00 ns, 7.1587 ms/op
+WorkloadResult   9: 1 op, 7129600.00 ns, 7.1296 ms/op
+WorkloadResult  10: 1 op, 7252600.00 ns, 7.2526 ms/op
+WorkloadResult  11: 1 op, 7009200.00 ns, 7.0092 ms/op
+WorkloadResult  12: 1 op, 7115600.00 ns, 7.1156 ms/op
+WorkloadResult  13: 1 op, 6866100.00 ns, 6.8661 ms/op
+WorkloadResult  14: 1 op, 6827200.00 ns, 6.8272 ms/op
+WorkloadResult  15: 1 op, 6777300.00 ns, 6.7773 ms/op
+WorkloadResult  16: 1 op, 6845000.00 ns, 6.8450 ms/op
+WorkloadResult  17: 1 op, 7025600.00 ns, 7.0256 ms/op
+WorkloadResult  18: 1 op, 6750300.00 ns, 6.7503 ms/op
+WorkloadResult  19: 1 op, 6779700.00 ns, 6.7797 ms/op
+WorkloadResult  20: 1 op, 7070300.00 ns, 7.0703 ms/op
+WorkloadResult  21: 1 op, 7082200.00 ns, 7.0822 ms/op
+// GC:  0 0 0 1441792 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 10040 has exited with code 0.
+
+Mean = 7.027 ms, StdErr = 0.036 ms (0.51%), N = 21, StdDev = 0.163 ms
+Min = 6.750 ms, Q1 = 6.866 ms, Median = 7.077 ms, Q3 = 7.130 ms, Max = 7.331 ms
+IQR = 0.264 ms, LowerFence = 6.471 ms, UpperFence = 7.525 ms
+ConfidenceInterval = [6.891 ms; 7.164 ms] (CI 99.9%), Margin = 0.137 ms (1.95% of Mean)
+Skewness = -0.25, Kurtosis = 1.97, MValue = 2
+
+// ** Remained 4 (50.0%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiAVX512]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2056 2060 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 16777216, Mode: KusumiAVX512)" --job ".NET 8.0" --benchmarkId 4 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 83600.00 ns, 83.6000 us/op
+WorkloadJitting  1: 1 op, 143597600.00 ns, 143.5976 ms/op
+
+OverheadWarmup   1: 1 op, 600.00 ns, 600.0000 ns/op
+OverheadWarmup   2: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   3: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   4: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   5: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   6: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   7: 1 op, 200.00 ns, 200.0000 ns/op
+
+OverheadActual   1: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   2: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   3: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   6: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   9: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  10: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  11: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  12: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  13: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  14: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  15: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  16: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  17: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  18: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  19: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  20: 1 op, 200.00 ns, 200.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 127963200.00 ns, 127.9632 ms/op
+WorkloadWarmup   2: 1 op, 129944300.00 ns, 129.9443 ms/op
+WorkloadWarmup   3: 1 op, 129820600.00 ns, 129.8206 ms/op
+WorkloadWarmup   4: 1 op, 127789200.00 ns, 127.7892 ms/op
+WorkloadWarmup   5: 1 op, 127694700.00 ns, 127.6947 ms/op
+WorkloadWarmup   6: 1 op, 127407800.00 ns, 127.4078 ms/op
+WorkloadWarmup   7: 1 op, 129428400.00 ns, 129.4284 ms/op
+WorkloadWarmup   8: 1 op, 130283900.00 ns, 130.2839 ms/op
+WorkloadWarmup   9: 1 op, 129487000.00 ns, 129.4870 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 129411900.00 ns, 129.4119 ms/op
+WorkloadActual   2: 1 op, 132800800.00 ns, 132.8008 ms/op
+WorkloadActual   3: 1 op, 129425900.00 ns, 129.4259 ms/op
+WorkloadActual   4: 1 op, 133611600.00 ns, 133.6116 ms/op
+WorkloadActual   5: 1 op, 129301000.00 ns, 129.3010 ms/op
+WorkloadActual   6: 1 op, 130025000.00 ns, 130.0250 ms/op
+WorkloadActual   7: 1 op, 129605000.00 ns, 129.6050 ms/op
+WorkloadActual   8: 1 op, 129835300.00 ns, 129.8353 ms/op
+WorkloadActual   9: 1 op, 130092800.00 ns, 130.0928 ms/op
+WorkloadActual  10: 1 op, 131113900.00 ns, 131.1139 ms/op
+WorkloadActual  11: 1 op, 130053900.00 ns, 130.0539 ms/op
+WorkloadActual  12: 1 op, 133684400.00 ns, 133.6844 ms/op
+WorkloadActual  13: 1 op, 129828800.00 ns, 129.8288 ms/op
+WorkloadActual  14: 1 op, 130316700.00 ns, 130.3167 ms/op
+WorkloadActual  15: 1 op, 129955000.00 ns, 129.9550 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 129411700.00 ns, 129.4117 ms/op
+WorkloadResult   2: 1 op, 129425700.00 ns, 129.4257 ms/op
+WorkloadResult   3: 1 op, 129300800.00 ns, 129.3008 ms/op
+WorkloadResult   4: 1 op, 130024800.00 ns, 130.0248 ms/op
+WorkloadResult   5: 1 op, 129604800.00 ns, 129.6048 ms/op
+WorkloadResult   6: 1 op, 129835100.00 ns, 129.8351 ms/op
+WorkloadResult   7: 1 op, 130092600.00 ns, 130.0926 ms/op
+WorkloadResult   8: 1 op, 131113700.00 ns, 131.1137 ms/op
+WorkloadResult   9: 1 op, 130053700.00 ns, 130.0537 ms/op
+WorkloadResult  10: 1 op, 129828600.00 ns, 129.8286 ms/op
+WorkloadResult  11: 1 op, 130316500.00 ns, 130.3165 ms/op
+WorkloadResult  12: 1 op, 129954800.00 ns, 129.9548 ms/op
+// GC:  0 0 0 0 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 32248 has exited with code 0.
+
+Mean = 129.914 ms, StdErr = 0.141 ms (0.11%), N = 12, StdDev = 0.490 ms
+Min = 129.301 ms, Q1 = 129.560 ms, Median = 129.895 ms, Q3 = 130.063 ms, Max = 131.114 ms
+IQR = 0.503 ms, LowerFence = 128.805 ms, UpperFence = 130.819 ms
+ConfidenceInterval = [129.286 ms; 130.541 ms] (CI 99.9%), Margin = 0.628 ms (0.48% of Mean)
+Skewness = 0.92, Kurtosis = 3.43, MValue = 2
+
+// ** Remained 3 (37.5%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiAVX2]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2044 2064 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 16777216, Mode: KusumiAVX2)" --job ".NET 8.0" --benchmarkId 5 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 94000.00 ns, 94.0000 us/op
+WorkloadJitting  1: 1 op, 148866200.00 ns, 148.8662 ms/op
+
+OverheadWarmup   1: 1 op, 600.00 ns, 600.0000 ns/op
+OverheadWarmup   2: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   4: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   5: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   6: 1 op, 200.00 ns, 200.0000 ns/op
+
+OverheadActual   1: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   2: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   6: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   9: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  10: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  11: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  12: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  13: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  14: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  15: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  16: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  17: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  18: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual  19: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  20: 1 op, 100.00 ns, 100.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 129193900.00 ns, 129.1939 ms/op
+WorkloadWarmup   2: 1 op, 126614500.00 ns, 126.6145 ms/op
+WorkloadWarmup   3: 1 op, 127799600.00 ns, 127.7996 ms/op
+WorkloadWarmup   4: 1 op, 129791300.00 ns, 129.7913 ms/op
+WorkloadWarmup   5: 1 op, 129769900.00 ns, 129.7699 ms/op
+WorkloadWarmup   6: 1 op, 131814400.00 ns, 131.8144 ms/op
+WorkloadWarmup   7: 1 op, 130586200.00 ns, 130.5862 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 129973300.00 ns, 129.9733 ms/op
+WorkloadActual   2: 1 op, 129498800.00 ns, 129.4988 ms/op
+WorkloadActual   3: 1 op, 129835200.00 ns, 129.8352 ms/op
+WorkloadActual   4: 1 op, 130102900.00 ns, 130.1029 ms/op
+WorkloadActual   5: 1 op, 128994700.00 ns, 128.9947 ms/op
+WorkloadActual   6: 1 op, 130399200.00 ns, 130.3992 ms/op
+WorkloadActual   7: 1 op, 130417200.00 ns, 130.4172 ms/op
+WorkloadActual   8: 1 op, 130150900.00 ns, 130.1509 ms/op
+WorkloadActual   9: 1 op, 134034300.00 ns, 134.0343 ms/op
+WorkloadActual  10: 1 op, 129746800.00 ns, 129.7468 ms/op
+WorkloadActual  11: 1 op, 124361300.00 ns, 124.3613 ms/op
+WorkloadActual  12: 1 op, 128969400.00 ns, 128.9694 ms/op
+WorkloadActual  13: 1 op, 129268700.00 ns, 129.2687 ms/op
+WorkloadActual  14: 1 op, 131425600.00 ns, 131.4256 ms/op
+WorkloadActual  15: 1 op, 132505300.00 ns, 132.5053 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 129973100.00 ns, 129.9731 ms/op
+WorkloadResult   2: 1 op, 129498600.00 ns, 129.4986 ms/op
+WorkloadResult   3: 1 op, 129835000.00 ns, 129.8350 ms/op
+WorkloadResult   4: 1 op, 130102700.00 ns, 130.1027 ms/op
+WorkloadResult   5: 1 op, 128994500.00 ns, 128.9945 ms/op
+WorkloadResult   6: 1 op, 130399000.00 ns, 130.3990 ms/op
+WorkloadResult   7: 1 op, 130417000.00 ns, 130.4170 ms/op
+WorkloadResult   8: 1 op, 130150700.00 ns, 130.1507 ms/op
+WorkloadResult   9: 1 op, 129746600.00 ns, 129.7466 ms/op
+WorkloadResult  10: 1 op, 124361100.00 ns, 124.3611 ms/op
+WorkloadResult  11: 1 op, 128969200.00 ns, 128.9692 ms/op
+WorkloadResult  12: 1 op, 129268500.00 ns, 129.2685 ms/op
+WorkloadResult  13: 1 op, 131425400.00 ns, 131.4254 ms/op
+// GC:  0 0 0 0 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 11516 has exited with code 0.
+
+Mean = 129.472 ms, StdErr = 0.464 ms (0.36%), N = 13, StdDev = 1.672 ms
+Min = 124.361 ms, Q1 = 129.268 ms, Median = 129.835 ms, Q3 = 130.151 ms, Max = 131.425 ms
+IQR = 0.882 ms, LowerFence = 127.945 ms, UpperFence = 131.474 ms
+ConfidenceInterval = [127.471 ms; 131.474 ms] (CI 99.9%), Margin = 2.002 ms (1.55% of Mean)
+Skewness = -2.04, Kurtosis = 6.89, MValue = 2
+
+// ** Remained 2 (25.0%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiScalar]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2016 2020 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 16777216, Mode: KusumiScalar)" --job ".NET 8.0" --benchmarkId 6 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 101700.00 ns, 101.7000 us/op
+WorkloadJitting  1: 1 op, 148109700.00 ns, 148.1097 ms/op
+
+OverheadWarmup   1: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   2: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   3: 1 op, 0.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   5: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   6: 1 op, 200.00 ns, 200.0000 ns/op
+
+OverheadActual   1: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   2: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   3: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   6: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   9: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  10: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  11: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  12: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  13: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  14: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  15: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  16: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  17: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  18: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  19: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  20: 1 op, 100.00 ns, 100.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 141437500.00 ns, 141.4375 ms/op
+WorkloadWarmup   2: 1 op, 135190600.00 ns, 135.1906 ms/op
+WorkloadWarmup   3: 1 op, 126737600.00 ns, 126.7376 ms/op
+WorkloadWarmup   4: 1 op, 126620600.00 ns, 126.6206 ms/op
+WorkloadWarmup   5: 1 op, 127411500.00 ns, 127.4115 ms/op
+WorkloadWarmup   6: 1 op, 126778500.00 ns, 126.7785 ms/op
+WorkloadWarmup   7: 1 op, 126428500.00 ns, 126.4285 ms/op
+WorkloadWarmup   8: 1 op, 126986000.00 ns, 126.9860 ms/op
+WorkloadWarmup   9: 1 op, 126768000.00 ns, 126.7680 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 126362000.00 ns, 126.3620 ms/op
+WorkloadActual   2: 1 op, 126788200.00 ns, 126.7882 ms/op
+WorkloadActual   3: 1 op, 126343600.00 ns, 126.3436 ms/op
+WorkloadActual   4: 1 op, 126895600.00 ns, 126.8956 ms/op
+WorkloadActual   5: 1 op, 125847400.00 ns, 125.8474 ms/op
+WorkloadActual   6: 1 op, 126095000.00 ns, 126.0950 ms/op
+WorkloadActual   7: 1 op, 126943400.00 ns, 126.9434 ms/op
+WorkloadActual   8: 1 op, 129810900.00 ns, 129.8109 ms/op
+WorkloadActual   9: 1 op, 118878600.00 ns, 118.8786 ms/op
+WorkloadActual  10: 1 op, 125349800.00 ns, 125.3498 ms/op
+WorkloadActual  11: 1 op, 126391800.00 ns, 126.3918 ms/op
+WorkloadActual  12: 1 op, 127248400.00 ns, 127.2484 ms/op
+WorkloadActual  13: 1 op, 129029600.00 ns, 129.0296 ms/op
+WorkloadActual  14: 1 op, 128972100.00 ns, 128.9721 ms/op
+WorkloadActual  15: 1 op, 126433900.00 ns, 126.4339 ms/op
+WorkloadActual  16: 1 op, 126859900.00 ns, 126.8599 ms/op
+WorkloadActual  17: 1 op, 128119300.00 ns, 128.1193 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 126361800.00 ns, 126.3618 ms/op
+WorkloadResult   2: 1 op, 126788000.00 ns, 126.7880 ms/op
+WorkloadResult   3: 1 op, 126343400.00 ns, 126.3434 ms/op
+WorkloadResult   4: 1 op, 126895400.00 ns, 126.8954 ms/op
+WorkloadResult   5: 1 op, 125847200.00 ns, 125.8472 ms/op
+WorkloadResult   6: 1 op, 126094800.00 ns, 126.0948 ms/op
+WorkloadResult   7: 1 op, 126943200.00 ns, 126.9432 ms/op
+WorkloadResult   8: 1 op, 118878400.00 ns, 118.8784 ms/op
+WorkloadResult   9: 1 op, 125349600.00 ns, 125.3496 ms/op
+WorkloadResult  10: 1 op, 126391600.00 ns, 126.3916 ms/op
+WorkloadResult  11: 1 op, 127248200.00 ns, 127.2482 ms/op
+WorkloadResult  12: 1 op, 126433700.00 ns, 126.4337 ms/op
+WorkloadResult  13: 1 op, 126859700.00 ns, 126.8597 ms/op
+WorkloadResult  14: 1 op, 128119100.00 ns, 128.1191 ms/op
+// GC:  0 0 0 0 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 12732 has exited with code 0.
+
+Mean = 126.040 ms, StdErr = 0.578 ms (0.46%), N = 14, StdDev = 2.163 ms
+Min = 118.878 ms, Q1 = 126.157 ms, Median = 126.413 ms, Q3 = 126.886 ms, Max = 128.119 ms
+IQR = 0.730 ms, LowerFence = 125.063 ms, UpperFence = 127.981 ms
+ConfidenceInterval = [123.599 ms; 128.480 ms] (CI 99.9%), Margin = 2.440 ms (1.94% of Mean)
+Skewness = -2.5, Kurtosis = 8.65, MValue = 2
+
+// ** Remained 1 (12.5%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=Threefish]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet ".NET 8.0-1.dll" --anonymousPipes 2020 1096 --benchmarkName "GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks.EncryptInPlace(DataSize: 16777216, Mode: Threefish)" --job ".NET 8.0" --benchmarkId 7 in C:\Users\John\source\repos\GreenfieldPQC\GreenfieldPQC\GreenfieldPQC.BenchmarkThreefishCompare\bin\Release\net8.0\.NET 8.0-1\bin\Release\net8.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 8.0(InvocationCount=1, UnrollFactor=1)
+
+OverheadJitting  1: 1 op, 99400.00 ns, 99.4000 us/op
+WorkloadJitting  1: 1 op, 236668600.00 ns, 236.6686 ms/op
+
+OverheadWarmup   1: 1 op, 500.00 ns, 500.0000 ns/op
+OverheadWarmup   2: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   3: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadWarmup   4: 1 op, 500.00 ns, 500.0000 ns/op
+OverheadWarmup   5: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadWarmup   6: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadWarmup   7: 1 op, 400.00 ns, 400.0000 ns/op
+OverheadWarmup   8: 1 op, 200.00 ns, 200.0000 ns/op
+
+OverheadActual   1: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   2: 1 op, 300.00 ns, 300.0000 ns/op
+OverheadActual   3: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   4: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   5: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   6: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   7: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual   8: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual   9: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  10: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  11: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  12: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  13: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  14: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  15: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  16: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  17: 1 op, 100.00 ns, 100.0000 ns/op
+OverheadActual  18: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  19: 1 op, 200.00 ns, 200.0000 ns/op
+OverheadActual  20: 1 op, 200.00 ns, 200.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 111335000.00 ns, 111.3350 ms/op
+WorkloadWarmup   2: 1 op, 113133900.00 ns, 113.1339 ms/op
+WorkloadWarmup   3: 1 op, 110898700.00 ns, 110.8987 ms/op
+WorkloadWarmup   4: 1 op, 111024700.00 ns, 111.0247 ms/op
+WorkloadWarmup   5: 1 op, 109985900.00 ns, 109.9859 ms/op
+WorkloadWarmup   6: 1 op, 109390100.00 ns, 109.3901 ms/op
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 110272100.00 ns, 110.2721 ms/op
+WorkloadActual   2: 1 op, 109544400.00 ns, 109.5444 ms/op
+WorkloadActual   3: 1 op, 109373600.00 ns, 109.3736 ms/op
+WorkloadActual   4: 1 op, 109289200.00 ns, 109.2892 ms/op
+WorkloadActual   5: 1 op, 104490800.00 ns, 104.4908 ms/op
+WorkloadActual   6: 1 op, 106351600.00 ns, 106.3516 ms/op
+WorkloadActual   7: 1 op, 107750400.00 ns, 107.7504 ms/op
+WorkloadActual   8: 1 op, 109917000.00 ns, 109.9170 ms/op
+WorkloadActual   9: 1 op, 109386100.00 ns, 109.3861 ms/op
+WorkloadActual  10: 1 op, 110858700.00 ns, 110.8587 ms/op
+WorkloadActual  11: 1 op, 110534600.00 ns, 110.5346 ms/op
+WorkloadActual  12: 1 op, 109807000.00 ns, 109.8070 ms/op
+WorkloadActual  13: 1 op, 109530200.00 ns, 109.5302 ms/op
+WorkloadActual  14: 1 op, 109729000.00 ns, 109.7290 ms/op
+WorkloadActual  15: 1 op, 109859100.00 ns, 109.8591 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 110271900.00 ns, 110.2719 ms/op
+WorkloadResult   2: 1 op, 109544200.00 ns, 109.5442 ms/op
+WorkloadResult   3: 1 op, 109373400.00 ns, 109.3734 ms/op
+WorkloadResult   4: 1 op, 109289000.00 ns, 109.2890 ms/op
+WorkloadResult   5: 1 op, 104490600.00 ns, 104.4906 ms/op
+WorkloadResult   6: 1 op, 106351400.00 ns, 106.3514 ms/op
+WorkloadResult   7: 1 op, 107750200.00 ns, 107.7502 ms/op
+WorkloadResult   8: 1 op, 109916800.00 ns, 109.9168 ms/op
+WorkloadResult   9: 1 op, 109385900.00 ns, 109.3859 ms/op
+WorkloadResult  10: 1 op, 110534400.00 ns, 110.5344 ms/op
+WorkloadResult  11: 1 op, 109806800.00 ns, 109.8068 ms/op
+WorkloadResult  12: 1 op, 109530000.00 ns, 109.5300 ms/op
+WorkloadResult  13: 1 op, 109728800.00 ns, 109.7288 ms/op
+WorkloadResult  14: 1 op, 109858900.00 ns, 109.8589 ms/op
+// GC:  1 0 0 23068672 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 21228 has exited with code 0.
+
+Mean = 108.988 ms, StdErr = 0.448 ms (0.41%), N = 14, StdDev = 1.678 ms
+Min = 104.491 ms, Q1 = 109.310 ms, Median = 109.537 ms, Q3 = 109.846 ms, Max = 110.534 ms
+IQR = 0.536 ms, LowerFence = 108.506 ms, UpperFence = 110.650 ms
+ConfidenceInterval = [107.095 ms; 110.881 ms] (CI 99.9%), Margin = 1.893 ms (1.74% of Mean)
+Skewness = -1.55, Kurtosis = 4.24, MValue = 2
+
+// ** Remained 0 (0.0%) benchmark(s) to run. Estimated finish 2026-01-05 22:53 (0h 0m from now) **
+Successfully reverted power plan (GUID: 381b4222-f694-41f0-9685-ff5bb260df2e FriendlyName: Balanced)
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts\results\GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts\results\GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts\results\GreenfieldPQC.BenchmarkThreefishCompare.KusumiVsThreefishBenchmarks-report.html
+
+// * Detailed results *
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiAVX512]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 8.915 ms, StdErr = 0.033 ms (0.37%), N = 14, StdDev = 0.124 ms
+Min = 8.651 ms, Q1 = 8.856 ms, Median = 8.937 ms, Q3 = 8.980 ms, Max = 9.103 ms
+IQR = 0.125 ms, LowerFence = 8.669 ms, UpperFence = 9.167 ms
+ConfidenceInterval = [8.775 ms; 9.055 ms] (CI 99.9%), Margin = 0.140 ms (1.57% of Mean)
+Skewness = -0.39, Kurtosis = 2.35, MValue = 2
+-------------------- Histogram --------------------
+[8.628 ms ; 8.849 ms) | @@@
+[8.849 ms ; 9.171 ms) | @@@@@@@@@@@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiAVX2]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 9.424 ms, StdErr = 0.047 ms (0.50%), N = 18, StdDev = 0.198 ms
+Min = 8.948 ms, Q1 = 9.341 ms, Median = 9.414 ms, Q3 = 9.534 ms, Max = 9.798 ms
+IQR = 0.193 ms, LowerFence = 9.052 ms, UpperFence = 9.823 ms
+ConfidenceInterval = [9.239 ms; 9.610 ms] (CI 99.9%), Margin = 0.185 ms (1.96% of Mean)
+Skewness = -0.31, Kurtosis = 3.07, MValue = 2
+-------------------- Histogram --------------------
+[8.849 ms ; 9.153 ms) | @
+[9.153 ms ; 9.374 ms) | @@@@
+[9.374 ms ; 9.572 ms) | @@@@@@@@@@
+[9.572 ms ; 9.821 ms) | @@@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=KusumiScalar]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 8.997 ms, StdErr = 0.039 ms (0.43%), N = 15, StdDev = 0.149 ms
+Min = 8.723 ms, Q1 = 8.898 ms, Median = 8.971 ms, Q3 = 9.127 ms, Max = 9.230 ms
+IQR = 0.229 ms, LowerFence = 8.555 ms, UpperFence = 9.469 ms
+ConfidenceInterval = [8.837 ms; 9.157 ms] (CI 99.9%), Margin = 0.160 ms (1.77% of Mean)
+Skewness = 0.07, Kurtosis = 1.8, MValue = 2
+-------------------- Histogram --------------------
+[8.644 ms ; 8.992 ms) | @@@@@@@@@
+[8.992 ms ; 9.264 ms) | @@@@@@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=1048576, Mode=Threefish]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 7.027 ms, StdErr = 0.036 ms (0.51%), N = 21, StdDev = 0.163 ms
+Min = 6.750 ms, Q1 = 6.866 ms, Median = 7.077 ms, Q3 = 7.130 ms, Max = 7.331 ms
+IQR = 0.264 ms, LowerFence = 6.471 ms, UpperFence = 7.525 ms
+ConfidenceInterval = [6.891 ms; 7.164 ms] (CI 99.9%), Margin = 0.137 ms (1.95% of Mean)
+Skewness = -0.25, Kurtosis = 1.97, MValue = 2
+-------------------- Histogram --------------------
+[6.731 ms ; 6.886 ms) | @@@@@@
+[6.886 ms ; 7.161 ms) | @@@@@@@@@@@@@
+[7.161 ms ; 7.369 ms) | @@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiAVX512]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 129.914 ms, StdErr = 0.141 ms (0.11%), N = 12, StdDev = 0.490 ms
+Min = 129.301 ms, Q1 = 129.560 ms, Median = 129.895 ms, Q3 = 130.063 ms, Max = 131.114 ms
+IQR = 0.503 ms, LowerFence = 128.805 ms, UpperFence = 130.819 ms
+ConfidenceInterval = [129.286 ms; 130.541 ms] (CI 99.9%), Margin = 0.628 ms (0.48% of Mean)
+Skewness = 0.92, Kurtosis = 3.43, MValue = 2
+-------------------- Histogram --------------------
+[129.020 ms ; 131.395 ms) | @@@@@@@@@@@@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiAVX2]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 129.472 ms, StdErr = 0.464 ms (0.36%), N = 13, StdDev = 1.672 ms
+Min = 124.361 ms, Q1 = 129.268 ms, Median = 129.835 ms, Q3 = 130.151 ms, Max = 131.425 ms
+IQR = 0.882 ms, LowerFence = 127.945 ms, UpperFence = 131.474 ms
+ConfidenceInterval = [127.471 ms; 131.474 ms] (CI 99.9%), Margin = 2.002 ms (1.55% of Mean)
+Skewness = -2.04, Kurtosis = 6.89, MValue = 2
+-------------------- Histogram --------------------
+[123.428 ms ; 127.471 ms) | @
+[127.471 ms ; 132.358 ms) | @@@@@@@@@@@@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=KusumiScalar]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 126.040 ms, StdErr = 0.578 ms (0.46%), N = 14, StdDev = 2.163 ms
+Min = 118.878 ms, Q1 = 126.157 ms, Median = 126.413 ms, Q3 = 126.886 ms, Max = 128.119 ms
+IQR = 0.730 ms, LowerFence = 125.063 ms, UpperFence = 127.981 ms
+ConfidenceInterval = [123.599 ms; 128.480 ms] (CI 99.9%), Margin = 2.440 ms (1.94% of Mean)
+Skewness = -2.5, Kurtosis = 8.65, MValue = 2
+-------------------- Histogram --------------------
+[117.700 ms ; 122.423 ms) | @
+[122.423 ms ; 125.036 ms) | 
+[125.036 ms ; 129.297 ms) | @@@@@@@@@@@@@
+---------------------------------------------------
+
+KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0(Runtime=.NET 8.0, InvocationCount=1, UnrollFactor=1) [DataSize=16777216, Mode=Threefish]
+Runtime = .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 108.988 ms, StdErr = 0.448 ms (0.41%), N = 14, StdDev = 1.678 ms
+Min = 104.491 ms, Q1 = 109.310 ms, Median = 109.537 ms, Q3 = 109.846 ms, Max = 110.534 ms
+IQR = 0.536 ms, LowerFence = 108.506 ms, UpperFence = 110.650 ms
+ConfidenceInterval = [107.095 ms; 110.881 ms] (CI 99.9%), Margin = 1.893 ms (1.74% of Mean)
+Skewness = -1.55, Kurtosis = 4.24, MValue = 2
+-------------------- Histogram --------------------
+[103.577 ms ; 105.980 ms) | @
+[105.980 ms ; 111.011 ms) | @@@@@@@@@@@@@
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.6466/22H2/2022Update)
+11th Gen Intel Core i9-11900H 2.50GHz, 1 CPU, 16 logical and 8 physical cores
+.NET SDK 10.0.101
+  [Host]   : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+  .NET 8.0 : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+
+Job=.NET 8.0  Runtime=.NET 8.0  InvocationCount=1  
+UnrollFactor=1  
+
+| Method         | DataSize | Mode         | Mean       | Error     | StdDev    | Gen0      | Allocated  |
+|--------------- |--------- |------------- |-----------:|----------:|----------:|----------:|-----------:|
+| EncryptInPlace | 1048576  | KusumiAVX512 |   8.915 ms | 0.1403 ms | 0.1244 ms |         - |          - |
+| EncryptInPlace | 1048576  | KusumiAVX2   |   9.424 ms | 0.1851 ms | 0.1981 ms |         - |          - |
+| EncryptInPlace | 1048576  | KusumiScalar |   8.997 ms | 0.1596 ms | 0.1493 ms |         - |          - |
+| EncryptInPlace | 1048576  | Threefish    |   7.027 ms | 0.1367 ms | 0.1628 ms |         - |  1441792 B |
+| EncryptInPlace | 16777216 | KusumiAVX512 | 129.914 ms | 0.6278 ms | 0.4901 ms |         - |          - |
+| EncryptInPlace | 16777216 | KusumiAVX2   | 129.472 ms | 2.0018 ms | 1.6716 ms |         - |          - |
+| EncryptInPlace | 16777216 | KusumiScalar | 126.040 ms | 2.4404 ms | 2.1633 ms |         - |          - |
+| EncryptInPlace | 16777216 | Threefish    | 108.988 ms | 1.8926 ms | 1.6777 ms | 1000.0000 | 23068672 B |
+
+// * Warnings *
+MinIterationTime
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> The minimum observed iteration time is 8.651ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> The minimum observed iteration time is 8.949ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> The minimum observed iteration time is 8.723ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> The minimum observed iteration time is 6.75ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Hints *
+Outliers
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> 1 outlier  was  removed, 2 outliers were detected (8.65 ms, 9.20 ms)
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> 1 outlier  was  detected (8.95 ms)
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> 3 outliers were removed (132.80 ms..133.68 ms)
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> 2 outliers were removed, 3 outliers were detected (124.36 ms, 132.51 ms, 134.03 ms)
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> 3 outliers were removed, 4 outliers were detected (118.88 ms, 128.97 ms..129.81 ms)
+  KusumiVsThreefishBenchmarks.EncryptInPlace: .NET 8.0 -> 1 outlier  was  removed, 4 outliers were detected (104.49 ms..107.75 ms, 110.86 ms)
+
+// * Legends *
+  DataSize  : Value of the 'DataSize' parameter
+  Mode      : Value of the 'Mode' parameter
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Gen0      : GC Generation 0 collects per 1000 operations
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 ms      : 1 Millisecond (0.001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:15 (15.43 sec), executed benchmarks: 8
+
+Global total time: 00:00:23 (23.93 sec), executed benchmarks: 8
+// * Artifacts cleanup *
+Artifacts cleanup is finished
