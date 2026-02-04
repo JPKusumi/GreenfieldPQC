@@ -1,8 +1,12 @@
-﻿# GreenfieldPQC
+﻿| **[JPKusumi.com](https://jpkusumi.com) presents—** |
+|:-----------------------:|
+
+# GreenfieldPQC
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NuGet Version](https://img.shields.io/nuget/v/GreenfieldPQC.svg)](https://www.nuget.org/packages/GreenfieldPQC/)  
 NuGet URL - https://www.nuget.org/packages/GreenfieldPQC  
 GitHub URL - https://github.com/JPKusumi/GreenfieldPQC
+v1.1 extends quantum safety to JWTs - JSON Web Tokens. Supporting JSON Web Signature (JWS) and JSON Web Encryption (JWE) with post-quantum algorithms. Yes you can easily implement quantum-safe encrypted JWTs, with GreenfieldPQC. See sections below, and a related blog post at JPKusumi.com.
 
 ## Overview: Quantum Resistance Available Now  
 
@@ -24,8 +28,9 @@ For more commentary from Grok, see REVIEW.md and BENCHMARKS.md in the repo root.
 **More Features:**
 - **API Simplicity**: Factory pattern for instantiation; synchronous and asynchronous methods.  
 - **Benchmarked**: Kusumi512 beats Threefish-512 in speed/memory.  
-- **Transitive Dependency**: Bundles oqs.dll for multi-platform (win/linux/osx, x64/arm64). Note that win-arm64 is not a supported platform.  
 - **NuGet Package**: Easy integration with .NET 8+; no additional configuration needed.
+- **Quantum Safe JWTs**: JWS (Dilithium) and JWE (Kyber + Kusumi512) support.
+- **Transitive Dependency**: Bundles oqs.dll for multi-platform (win/linux/osx, x64/arm64). Note that win-arm64 is not a supported platform.  
 
 ## Installation  
 
@@ -188,6 +193,55 @@ var progress = new Progress<double>(p => Console.WriteLine($"{p:P}"));
 Func<long, Task<byte[]>> nonceGen = async bytes => CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
 await cipher.EncryptStreamAsync(input, output, progress: progress, nonceGenerator: nonceGen);
 ```
+
+## Quantum Safe JSON Web Signature (JWS)
+JWS provides signed JWTs (three-segment format: header.payload.signature) for integrity and authenticity using Dilithium.
+
+### In Theory
+Compact tokens with post-quantum signatures, suitable for auth flows like OAuth.
+
+### In Practice
+API Highlights (Dilithium levels: 2, 3, 5):
+- CryptoFactory.CreateJwsProvider(level): Returns IJwsProvider.
+- CreateJws(payload, privateKey): Returns JWS string.
+- VerifyJws(jwsToken, publicKey): Returns payload if valid, throws otherwise.
+
+Round-Trip Example:
+```csharp
+var jwsProvider = CryptoFactory.CreateJwsProvider(3);
+var (pubKey, privKey) = CryptoFactory.CreateDilithium(3).GenerateKeyPair();
+var payload = new { sub = "user123", exp = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds() };
+string jwsToken = jwsProvider.CreateJws(payload, privKey);
+var verified = jwsProvider.VerifyJws(jwsToken, pubKey) as dynamic;
+Assert.Equal(payload.sub, verified.sub);
+```
+
+Best Practices: Use short expirations; validate claims post-verification.
+
+## Quantum Safe JSON Web Encryption (JWE)
+JWE provides encrypted JWTs (five-segment format: header.encrypted_key.iv.ciphertext.tag) for confidentiality using Kyber and Kusumi512.
+
+### In Theory
+Hybrid encryption: Kyber for key wrapping, Kusumi512 for payload.
+
+### In Practice
+API Highlights (Kyber levels: 1, 3, 5; Kusumi algorithm: Kusumi512 plain or Kusumi512Poly1305 AEAD):
+- CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm): Returns IJweProvider.
+- CreateJwe(payload, publicKey): Returns JWE string.
+- DecryptJwe(jweToken, privateKey): Returns raw decrypted payload as string (JSON); deserialize as needed if valid, throws otherwise.
+
+Round-Trip Example:
+```csharp
+var jweProvider = CryptoFactory.CreateJweProvider(3, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305);  // Level 3 Kyber, AEAD Kusumi
+var (pubKey, privKey) = CryptoFactory.CreateKyber(768).GenerateKeyPair();
+var payload = new { sub = "user123", secret = "confidential" };
+string jweToken = jweProvider.CreateJwe(payload, pubKey);
+string decryptedJson = jweProvider.DecryptJwe(jweToken, privKey);
+dynamic decrypted = JsonSerializer.Deserialize<dynamic>(decryptedJson);
+Assert.Equal(payload.secret, decrypted.secret);
+```
+
+Best Practices: Use HTTPS; rotate keys; nest JWS in JWE for signed-encrypted tokens.
 
 ## Kyber
 
@@ -420,6 +474,8 @@ Static factory for keys, nonces, and instances.
 - **ComputeSHA256(byte[] data)**: SHA-256 hash.
 - **ComputeSHA512(byte[] data)**: SHA-512 hash.
   - Example: `byte[] hash = CryptoFactory.ComputeSHA512(data);`
+- **CreateJwsProvider(int dilithiumLevel = 3)**: Returns IJwsProvider for post-quantum signed JWTs (Dilithium levels: 2, 3, 5).
+- **CreateJweProvider(int kyberLevel = 3, CipherAlgorithm kusumiAlgorithm = CipherAlgorithm.Kusumi512)**: Returns IJweProvider for post-quantum encrypted JWTs (Kyber levels: 1, 3, 5; Kusumi: Kusumi512 or Kusumi512Poly1305).
 
 Supported Algorithms (Enum: `CipherAlgorithm`): Kusumi512, Kusumi512Poly1305, Kyber, Dilithium, SHA256, SHA512.
 
@@ -459,3 +515,27 @@ Interface for hash operations (useful for mocking/testing).
 
 - **ComputeHash(byte[] data)**: Returns hash digest for byte array input.
 - **ComputeHash(Stream stream)**: Returns hash digest for stream input.
+
+### IJwsProvider (for JWS)
+Interface for JSON Web Signature operations (useful for mocking/testing).
+
+- **CreateJws(object payload, byte[] privateKey)**: Returns compact JWS string.
+- **VerifyJws(string jwsToken, byte[] publicKey)**: Returns deserialized payload object if valid; throws otherwise.
+
+### IJweProvider (for JWE)
+Interface for JSON Web Encryption operations (useful for mocking/testing).
+
+- **CreateJwe(object payload, byte[] publicKey)**: Returns compact JWE string.
+- **DecryptJwe(string jweToken, byte[] privateKey)**: Returns raw decrypted payload string (JSON) if valid; throws otherwise.
+
+
+## Resources and Community
+For more information, blog posts, and updates on this and other JP Kusumi creations, visit the [JPKusumi.com](https://jpkusumi.com). Recent blog posts include:
+- Key and nonce management best practices.
+- Handling cryptographic metadata securely.
+- Quantum-safe JWTs with GreenfieldPQC.
+
+JPKusumi.com aims to be a resource for developers. There is also a discussion forum, open in the [GitHub repo for GreenfieldPQC](https://github.com/JPKusumi/GreenfieldPQC/discussions). Comments and feedback may be directed there.
+
+### License
+MIT License

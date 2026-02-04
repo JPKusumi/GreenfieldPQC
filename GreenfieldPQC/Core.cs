@@ -62,28 +62,28 @@ namespace GreenfieldPQC.Cryptography
 
         public static byte[] ComputeSHA256(byte[] data)
         {
-            if (data == null) throw new ArgumentNullException(nameof(data));
+            ArgumentNullException.ThrowIfNull(data);
             using SHA256 sha = SHA256.Create();
             return sha.ComputeHash(data);
         }
 
         public static byte[] ComputeSHA256(Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
             using SHA256 sha = SHA256.Create();
             return sha.ComputeHash(stream);
         }
 
         public static byte[] ComputeSHA512(byte[] data)
         {
-            if (data == null) throw new ArgumentNullException(nameof(data));
+            ArgumentNullException.ThrowIfNull(data);
             using SHA512 sha = SHA512.Create();
             return sha.ComputeHash(data);
         }
 
         public static byte[] ComputeSHA512(Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
             using SHA512 sha = SHA512.Create();
             return sha.ComputeHash(stream);
         }
@@ -123,6 +123,23 @@ namespace GreenfieldPQC.Cryptography
                 _ => throw new ArgumentOutOfRangeException(nameof(type))
             };
         }
+        public static IJweProvider CreateJweProvider(int kyberLevel = 3, CryptoFactory.CipherAlgorithm kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512)  // kyberLevel: 1 (512), 3 (768), 5 (1024); kusumiAlgorithm: Kusumi512 or Kusumi512Poly1305
+        {
+            int kyberParam = kyberLevel switch
+            {
+                1 => 512,
+                3 => 768,
+                5 => 1024,
+                _ => throw new ArgumentOutOfRangeException(nameof(kyberLevel), "Must be 1, 3, or 5.")
+            };
+            var kem = CreateKyber(kyberParam);  // Pass the mapped parameter
+            return new JweProvider(kem, kusumiAlgorithm);
+        }
+        public static IJwsProvider CreateJwsProvider(int dilithiumLevel = 3)  // Level: 2 (44), 3 (65), 5 (87)
+        {
+            var signer = CreateDilithium(dilithiumLevel);  // Existing factory for ML-DSA
+            return new JwsProvider(signer);
+        }
     }
 
     /// <summary>
@@ -147,20 +164,14 @@ namespace GreenfieldPQC.Cryptography
     /// <summary>
     /// Abstract base class for symmetric ciphers, handling key and nonce management.
     /// </summary>
-    public abstract class SymmetricCipher : ICryptoPrimitive, ISymmetricCipher
+    public abstract class SymmetricCipher(byte[] key, byte[] nonce) : ICryptoPrimitive, ISymmetricCipher
     {
         /// <summary>Gets the name of the cipher algorithm.</summary>
         public abstract string AlgorithmName { get; }
         /// <summary>Gets the encryption key.</summary>
-        protected byte[] Key { get; }
+        protected byte[] Key { get; } = key ?? throw new ArgumentNullException(nameof(key));
         /// <summary>Gets the nonce (number used once).</summary>
-        protected byte[] Nonce { get; }
-
-        protected SymmetricCipher(byte[] key, byte[] nonce)
-        {
-            Key = key ?? throw new ArgumentNullException(nameof(key));
-            Nonce = nonce ?? throw new ArgumentNullException(nameof(nonce));
-        }
+        protected byte[] Nonce { get; } = nonce ?? throw new ArgumentNullException(nameof(nonce));
 
         public abstract Task<byte[]> EncryptAsync(byte[] plaintext, CancellationToken cancellationToken = default);
         public abstract byte[] Encrypt(byte[] plaintext);
@@ -173,8 +184,8 @@ namespace GreenfieldPQC.Cryptography
 
         public virtual async Task EncryptStreamAsync(Stream input, Stream output, int bufferSize = 4096, IProgress<double>? progress = null, IProgress<int>? segmentProgress = null, Func<long, Task<byte[]>>? nonceGenerator = null, CancellationToken cancellationToken = default)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            ArgumentNullException.ThrowIfNull(input);
+            ArgumentNullException.ThrowIfNull(output);
             if (bufferSize <= 0) throw new ArgumentException("Buffer size must be positive.", nameof(bufferSize));
 
             byte[] buffer = new byte[bufferSize];
@@ -185,7 +196,7 @@ namespace GreenfieldPQC.Cryptography
 
             while (true)
             {
-                int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
+                int bytesRead = await input.ReadAsync(buffer.AsMemory(0, bufferSize), cancellationToken).ConfigureAwait(false);
                 if (bytesRead == 0) break;
 
                 if (nonceGenerator != null && bytesProcessed / bytesPerSegment > (bytesProcessed - bytesRead) / bytesPerSegment)
@@ -196,7 +207,7 @@ namespace GreenfieldPQC.Cryptography
                 }
 
                 await EncryptInPlaceAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-                await output.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+                await output.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
                 bytesProcessed += bytesRead;
                 if (totalBytes > 0)
                     progress?.Report((double)bytesProcessed / totalBytes);
@@ -205,8 +216,8 @@ namespace GreenfieldPQC.Cryptography
 
         public virtual void EncryptStream(Stream input, Stream output, int bufferSize = 4096, Func<long, byte[]>? nonceGenerator = null)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            ArgumentNullException.ThrowIfNull(input);
+            ArgumentNullException.ThrowIfNull(output);
             if (bufferSize <= 0) throw new ArgumentException("Buffer size must be positive.", nameof(bufferSize));
 
             byte[] buffer = new byte[bufferSize];
@@ -227,8 +238,8 @@ namespace GreenfieldPQC.Cryptography
 
         public virtual async Task DecryptStreamAsync(Stream input, Stream output, int bufferSize = 4096, IProgress<double>? progress = null, IProgress<int>? segmentProgress = null, Func<long, Task<byte[]>>? nonceGenerator = null, CancellationToken cancellationToken = default)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            ArgumentNullException.ThrowIfNull(input);
+            ArgumentNullException.ThrowIfNull(output);
             if (bufferSize <= 0) throw new ArgumentException("Buffer size must be positive.", nameof(bufferSize));
 
             byte[] buffer = new byte[bufferSize];
@@ -239,7 +250,7 @@ namespace GreenfieldPQC.Cryptography
 
             while (true)
             {
-                int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
+                int bytesRead = await input.ReadAsync(buffer.AsMemory(0, bufferSize), cancellationToken).ConfigureAwait(false);
                 if (bytesRead == 0) break;
 
                 if (nonceGenerator != null && bytesProcessed / bytesPerSegment > (bytesProcessed - bytesRead) / bytesPerSegment)
@@ -250,7 +261,7 @@ namespace GreenfieldPQC.Cryptography
                 }
 
                 await DecryptInPlaceAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-                await output.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+                await output.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
                 bytesProcessed += bytesRead;
                 if (totalBytes > 0)
                     progress?.Report((double)bytesProcessed / totalBytes);
@@ -259,8 +270,8 @@ namespace GreenfieldPQC.Cryptography
 
         public virtual void DecryptStream(Stream input, Stream output, int bufferSize = 4096, Func<long, byte[]>? nonceGenerator = null)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            ArgumentNullException.ThrowIfNull(input);
+            ArgumentNullException.ThrowIfNull(output);
             if (bufferSize <= 0) throw new ArgumentException("Buffer size must be positive.", nameof(bufferSize));
 
             byte[] buffer = new byte[bufferSize];
@@ -282,7 +293,7 @@ namespace GreenfieldPQC.Cryptography
         /// <summary>Updates the nonce for ciphers requiring nonce changes. Use with caution to avoid nonce reuse.</summary>
         protected virtual void UpdateNonce(byte[] newNonce)
         {
-            if (newNonce == null) throw new ArgumentNullException(nameof(newNonce));
+            ArgumentNullException.ThrowIfNull(newNonce);
             Array.Clear(Nonce, 0, Nonce.Length);
             Array.Copy(newNonce, Nonce, Math.Min(newNonce.Length, Nonce.Length));
         }
@@ -292,6 +303,7 @@ namespace GreenfieldPQC.Cryptography
         {
             if (Key != null) Array.Clear(Key, 0, Key.Length);
             if (Nonce != null) Array.Clear(Nonce, 0, Nonce.Length);
+            GC.SuppressFinalize(this);
         }
     }
 }

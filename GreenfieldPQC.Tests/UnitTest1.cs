@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,6 +13,257 @@ using static GreenfieldPQC.Cryptography.CryptoFactory;
 
 namespace GreenfieldPQC.Tests
 {
+    public class JwtTests
+    {
+        private static readonly object LogLock = new(); // Lock for file writes
+        private readonly string logPath = Path.Combine(Path.GetTempPath(), "jwt_test_log.txt");
+        private void Log(string message)
+        {
+            lock (LogLock)
+            {
+                File.AppendAllText(logPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
+            }
+        }
+        [Fact]
+        public void JwsProvider_CreateJws_VerifyJws_RoundTrip()
+        {
+            // Arrange
+            var dilithiumLevel = 3;  // Balanced security (ML-DSA-65)
+            var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
+            var (publicKey, privateKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair();
+            var payload = new { sub = "user123", name = "Test User", iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), exp = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds() };
+
+            // Act
+            string jwsToken = jwsProvider.CreateJws(payload, privateKey);
+            var verifiedPayload = jwsProvider.VerifyJws(jwsToken, publicKey);  // No 'as dynamic' - assume VerifyJws returns object
+
+            // Deserialize to JsonElement for property access
+            JsonElement verifiedJson = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(verifiedPayload));
+
+            // Assert
+            Assert.NotNull(jwsToken);
+            Assert.Equal(3, jwsToken.Split('.').Length);  // Three-part format
+            Assert.NotNull(verifiedPayload);
+            Assert.Equal("user123", verifiedJson.GetProperty("sub").GetString());
+            Assert.Equal("Test User", verifiedJson.GetProperty("name").GetString());
+            Assert.Equal(payload.iat, verifiedJson.GetProperty("iat").GetInt64());
+            Assert.Equal(payload.exp, verifiedJson.GetProperty("exp").GetInt64());
+
+            Log("JwsProvider_CreateJws_VerifyJws_RoundTrip passed");
+        }
+
+        [Fact]
+        public void JwsProvider_VerifyJws_InvalidSignature_ThrowsException()
+        {
+            // Arrange
+            var dilithiumLevel = 3;
+            var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
+            var (publicKey, privateKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair(); var payload = new { sub = "user123" };
+            string jwsToken = jwsProvider.CreateJws(payload, privateKey);
+
+            // Tamper with the token (e.g., alter payload part)
+            string[] parts = jwsToken.Split('.');
+            parts[1] = Utility.Base64UrlEncode(Encoding.UTF8.GetBytes("tampered"));  // Corrupt payload
+            string tamperedToken = string.Join(".", parts);
+
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() => jwsProvider.VerifyJws(tamperedToken, publicKey));  // Or your specific exception type, e.g., CryptographicException
+
+            Log("JwsProvider_VerifyJws_InvalidSignature_ThrowsException passed");
+        }
+
+        [Fact]
+        public void JwsProvider_CreateJws_EmptyPayload_RoundTrip()
+        {
+            // Arrange
+            var dilithiumLevel = 3;
+            var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
+            var (publicKey, privateKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair(); var emptyPayload = new { };  // Empty object
+
+            // Act
+            string jwsToken = jwsProvider.CreateJws(emptyPayload, privateKey);
+            var verifiedPayload = jwsProvider.VerifyJws(jwsToken, publicKey);
+
+            // Deserialize to JsonElement and check if empty
+            JsonElement verifiedJson = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(verifiedPayload));
+            Assert.Empty(verifiedJson.EnumerateObject());
+
+            Log("JwsProvider_CreateJws_EmptyPayload_RoundTrip passed");
+        }
+
+        [Theory]
+        [InlineData(2)]  // Level 2 (ML-DSA-44)
+        [InlineData(3)]  // Level 3 (ML-DSA-65)
+        [InlineData(5)]  // Level 5 (ML-DSA-87)
+        public void JwsProvider_CreateJws_VariousLevels_RoundTrip(int dilithiumLevel)
+        {
+            // Arrange
+            var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
+            var (publicKey, privateKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair(); var payload = new { test = "value" };
+
+            // Act
+            string jwsToken = jwsProvider.CreateJws(payload, privateKey);
+            var verifiedPayload = jwsProvider.VerifyJws(jwsToken, publicKey);
+
+            // Deserialize to JsonElement for property access
+            JsonElement verifiedJson = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(verifiedPayload));
+
+            // Assert
+            Assert.NotNull(jwsToken);
+            Assert.Equal("value", verifiedJson.GetProperty("test").GetString());
+
+            Log($"JwsProvider_CreateJws_VariousLevels_RoundTrip (Level {dilithiumLevel}) passed");
+        }
+
+        [Fact]
+        public void JweProvider_CreateJwe_DecryptJwe_RoundTrip()
+        {
+            // Arrange
+            var kyberLevel = 3;  // Balanced security
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;  // AEAD for authenticity
+            var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            var payload = new { sub = "user123", name = "Test User", iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), exp = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds() };
+
+            // Act
+            string jweToken = jweProvider.CreateJwe(payload, publicKey);
+            string decryptedJson = jweProvider.DecryptJwe(jweToken, privateKey);
+
+            // Deserialize to JsonElement for property access
+            JsonElement decryptedElement = JsonSerializer.Deserialize<JsonElement>(decryptedJson);
+
+            // Assert
+            Assert.NotNull(jweToken);
+            Assert.Equal(5, jweToken.Split('.').Length);  // Five-part format
+            Assert.Equal("user123", decryptedElement.GetProperty("sub").GetString());
+            Assert.Equal("Test User", decryptedElement.GetProperty("name").GetString());
+            Assert.Equal(payload.iat, decryptedElement.GetProperty("iat").GetInt64());
+            Assert.Equal(payload.exp, decryptedElement.GetProperty("exp").GetInt64());
+
+            Log("JweProvider_CreateJwe_DecryptJwe_RoundTrip passed");
+        }
+
+        [Fact]
+        public void JweProvider_DecryptJwe_InvalidToken_ThrowsException()
+        {
+            // Arrange
+            var kyberLevel = 3;
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
+            var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            var payload = new { sub = "user123" };
+            string jweToken = jweProvider.CreateJwe(payload, publicKey);
+
+            // Tamper with the token (e.g., alter ciphertext part)
+            string[] parts = jweToken.Split('.');
+            parts[3] = Utility.Base64UrlEncode(Encoding.UTF8.GetBytes("tampered"));  // Corrupt ciphertext
+            string tamperedToken = string.Join(".", parts);
+
+            // Act & Assert
+            Assert.Throws<System.Security.Cryptography.CryptographicException>(() => jweProvider.DecryptJwe(tamperedToken, privateKey));  // Match the actual exception
+
+            Log("JweProvider_DecryptJwe_InvalidToken_ThrowsException passed");
+        }
+
+        [Fact]
+        public void JweProvider_CreateJwe_EmptyPayload_RoundTrip()
+        {
+            // Arrange
+            var kyberLevel = 3;
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512;  // Plain Kusumi512
+            var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            var emptyPayload = new { };  // Empty object
+
+            // Act
+            string jweToken = jweProvider.CreateJwe(emptyPayload, publicKey);
+            string decryptedJson = jweProvider.DecryptJwe(jweToken, privateKey);
+
+            // Deserialize to JsonElement and check if empty
+            JsonElement decryptedElement = JsonSerializer.Deserialize<JsonElement>(decryptedJson);
+            Assert.Equal(JsonValueKind.Object, decryptedElement.ValueKind);
+            Assert.Empty(decryptedElement.EnumerateObject());  // Use Assert.Empty for collection size
+
+            Log("JweProvider_CreateJwe_EmptyPayload_RoundTrip passed");
+        }
+
+        [Theory]
+        [InlineData(1, CryptoFactory.CipherAlgorithm.Kusumi512)]  // Level 1, plain
+        [InlineData(3, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305)]  // Level 3, Poly1305
+        [InlineData(5, CryptoFactory.CipherAlgorithm.Kusumi512)]  // Level 5, plain
+        public void JweProvider_CreateJwe_VariousLevelsAndVariants_RoundTrip(int kyberLevel, CryptoFactory.CipherAlgorithm kusumiAlgorithm)
+        {
+            // Arrange
+            var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            var payload = new { test = "value" };
+
+            // Act
+            string jweToken = jweProvider.CreateJwe(payload, publicKey);
+            string decryptedJson = jweProvider.DecryptJwe(jweToken, privateKey);
+
+            // Deserialize to JsonElement for property access
+            JsonElement decryptedElement = JsonSerializer.Deserialize<JsonElement>(decryptedJson);
+
+            // Assert
+            Assert.NotNull(jweToken);
+            Assert.Equal("value", decryptedElement.GetProperty("test").GetString());
+
+            Log($"JweProvider_CreateJwe_VariousLevelsAndVariants_RoundTrip (Level {kyberLevel}, Algorithm {kusumiAlgorithm}) passed");
+        }
+
+        [Fact]
+        public void JwsJweNesting_CreateNested_VerifyRoundTrip()
+        {
+            // Arrange
+            var dilithiumLevel = 3;  // For JWS
+            var kyberLevel = 3;  // For JWE
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;  // AEAD for JWE
+
+            IJwsProvider jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
+            IJweProvider jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+
+            var (signPubKey, signPrivKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair();
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (encPubKey, encPrivKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            var originalPayload = new { sub = "user123", secret = "nested confidential data", iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), exp = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds() };
+
+            // Act - Create inner JWS
+            string innerJws = jwsProvider.CreateJws(originalPayload, signPrivKey);
+
+            // Encrypt the JWS as JWE payload (nesting)
+            string nestedToken = jweProvider.CreateJwe(innerJws, encPubKey);  // Pass string JWS as payload
+
+            // Decrypt outer JWE to get inner JWS
+            string decryptedJws = jweProvider.DecryptJwe(nestedToken, encPrivKey);  // Now returns string
+            Assert.NotNull(decryptedJws);  // Ensure not null
+
+            // Verify inner JWS to get original payload
+            object verifiedObj = jwsProvider.VerifyJws(decryptedJws, signPubKey);
+            dynamic verifiedPayload = verifiedObj;
+
+            // Assert
+            Assert.NotNull(nestedToken);
+            Assert.Equal(5, nestedToken.Split('.').Length);  // JWE format
+            Assert.Equal(3, decryptedJws.Split('.').Length);  // Inner JWS format
+            Assert.NotNull(verifiedPayload);
+            Assert.Equal(originalPayload.sub, verifiedPayload.sub);
+            Assert.Equal(originalPayload.secret, verifiedPayload.secret);
+            Assert.Equal(originalPayload.iat, verifiedPayload.iat);
+            Assert.Equal(originalPayload.exp, verifiedPayload.exp);
+
+            Log("JwsJweNesting_CreateNested_VerifyRoundTrip passed");
+        }
+    }
     public class Kusumi512Tests
     {
         private static readonly object LogLock = new(); // Lock for file writes
@@ -87,8 +339,7 @@ namespace GreenfieldPQC.Tests
             byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] data = Encoding.UTF8.GetBytes("Hello, Kusumi-512!");
-            byte[] buffer = data.ToArray();
-
+            byte[] buffer = [.. data];
             await cipher.EncryptInPlaceAsync(buffer.AsMemory());
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
             await decryptCipher.DecryptInPlaceAsync(buffer.AsMemory());
@@ -104,7 +355,7 @@ namespace GreenfieldPQC.Tests
             byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
             using var cipher = CryptoFactory.CreateKusumi512(key, nonce);
             byte[] data = Encoding.UTF8.GetBytes("Hello, Kusumi-512!");
-            byte[] buffer = data.ToArray();
+            byte[] buffer = [..data];
 
             cipher.EncryptInPlace(buffer.AsSpan());
             using var decryptCipher = CryptoFactory.CreateKusumi512(key, nonce);
@@ -176,7 +427,8 @@ namespace GreenfieldPQC.Tests
         {
             byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512);
             byte[] nonce1 = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
-            byte[] nonce2 = nonce1.ToArray(); nonce2[8] = 1; // Change byte in nonce affecting word 24
+            byte[] nonce2 = [..nonce1]; 
+            nonce2[8] = 1; // Change byte in nonce affecting word 24
             byte[] buffer1 = new byte[100];
             byte[] buffer2 = new byte[100];
             using var cipher1 = CryptoFactory.CreateKusumi512(key, nonce1);
@@ -465,7 +717,7 @@ namespace GreenfieldPQC.Tests
         public void Verify_InvalidSignature_ReturnsFalse()
         {
             var dilithium = CryptoFactory.CreateDilithium(2);
-            var (publicKey, privateKey) = dilithium.GenerateKeyPair();
+            var (publicKey, _) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
             byte[] signature = new byte[dilithium.GetSignatureLength()];
             RandomNumberGenerator.Fill(signature); // Invalid signature
