@@ -122,21 +122,20 @@ jobs:
 
       - name: Copy natives to runtimes
         run: |
-          mkdir -p runtimes/win-x64/native runtimes/linux-x64/native runtimes/linux-arm64/native runtimes/osx-x64/native runtimes/osx-arm64/native
-          cp artifacts/oqs-win-x64/oqs.dll runtimes/win-x64/native/ || true
-          cp artifacts/oqs-linux-x64/liboqs.so runtimes/linux-x64/native/ || true
-          cp artifacts/oqs-linux-arm64/liboqs.so runtimes/linux-arm64/native/ || true
-          cp artifacts/oqs-osx-x64/liboqs.dylib runtimes/osx-x64/native/ || true
-          cp artifacts/oqs-osx-arm64/liboqs.dylib runtimes/osx-arm64/native/ || true
+          mkdir -p GreenfieldPQC/runtimes/win-x64/native GreenfieldPQC/runtimes/linux-x64/native GreenfieldPQC/runtimes/linux-arm64/native GreenfieldPQC/runtimes/osx-x64/native GreenfieldPQC/runtimes/osx-arm64/native
+          cp artifacts/oqs-win-x64/oqs.dll GreenfieldPQC/runtimes/win-x64/native/ || true
+          cp artifacts/oqs-linux-x64/liboqs.so GreenfieldPQC/runtimes/linux-x64/native/ || true
+          cp artifacts/oqs-linux-arm64/liboqs.so GreenfieldPQC/runtimes/linux-arm64/native/ || true
+          cp artifacts/oqs-osx-x64/liboqs.dylib GreenfieldPQC/runtimes/osx-x64/native/ || true
+          cp artifacts/oqs-osx-arm64/liboqs.dylib GreenfieldPQC/runtimes/osx-arm64/native/ || true
 
-      - name: Change to project directory  # New step
-        run: cd GreenfieldPQC
-
-      - name: Build  # Optional if --no-build, but ensures
+      - name: Build
+        working-directory: GreenfieldPQC
         run: dotnet build -c Release
 
       - name: Pack NuGet
-        run: dotnet pack GreenfieldPQC.csproj -c Release --no-build --output nupkgs
+        working-directory: GreenfieldPQC
+        run: dotnet pack -c Release --no-build --output ../nupkgs
 
       - name: Upload NuGet artifact
         uses: actions/upload-artifact@v4
