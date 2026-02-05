@@ -129,6 +129,9 @@ jobs:
           cp artifacts/oqs-osx-x64/liboqs.dylib runtimes/osx-x64/native/ || true
           cp artifacts/oqs-osx-arm64/liboqs.dylib runtimes/osx-arm64/native/ || true
 
+      - name: List runtimes contents
+        run: ls -R runtimes
+
       - name: Build
         run: dotnet build -c Release
 
