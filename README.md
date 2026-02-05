@@ -280,7 +280,7 @@ var (ssSender, ct) = kem.Encapsulate(pk);
 byte[] ssReceiver = kem.Decapsulate(ct, sk);  // ssSender matches ssReceiver (use CryptographicOperations.FixedTimeEquals to verify)
 ```
 
-For use with Kyber, it is good to know about this enum:
+For use with Kyber, it is good to be aware of this enum:
 ```csharp
 public enum KyberSecurityLevel
 {
@@ -330,7 +330,7 @@ byte[] sig = signer.Sign(message, privKey);
 bool valid = signer.Verify(message, sig, pubKey);  // true
 ```
 
-For use with Dilithium, it is good to know about this enum:
+For use with Dilithium, it is good to be aware of this enum:
 ```csharp
 public enum DilithiumSecurityLevel
 {
@@ -496,7 +496,7 @@ Static factory for keys, nonces, and instances.
 - **CreateJwsProvider(int dilithiumLevel = 3)**: Returns IJwsProvider for post-quantum signed JWTs (Dilithium levels: 2, 3, 5).
 - **CreateJweProvider(int kyberLevel = 3, CipherAlgorithm kusumiAlgorithm = CipherAlgorithm.Kusumi512)**: Returns IJweProvider for post-quantum encrypted JWTs (Kyber levels: 1, 3, 5; Kusumi: Kusumi512 or Kusumi512Poly1305).
 
-For use with CryptoFactory, it is good to know about this enum:
+For use with CryptoFactory, it is good to be aware of this enum:
 ```csharp
 public enum CipherAlgorithm
 {
