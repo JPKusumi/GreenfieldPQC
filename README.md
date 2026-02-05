@@ -5,8 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NuGet Version](https://img.shields.io/nuget/v/GreenfieldPQC.svg)](https://www.nuget.org/packages/GreenfieldPQC/)  
 NuGet URL - https://www.nuget.org/packages/GreenfieldPQC  
-GitHub URL - https://github.com/JPKusumi/GreenfieldPQC
-v1.1 extends quantum safety to JWTs - JSON Web Tokens. Supporting JSON Web Signature (JWS) and JSON Web Encryption (JWE) with post-quantum algorithms. Yes you can easily implement quantum-safe encrypted JWTs, with GreenfieldPQC. See sections below, and a related blog post at JPKusumi.com.
+GitHub URL - https://github.com/JPKusumi/GreenfieldPQC  
+
+v1.1 extends quantum safety to JWTs - JSON Web Tokens. New helpers support JSON Web Signature (JWS) and JSON Web Encryption (JWE) with post-quantum algorithms. Yes, you can easily implement quantum-safe encrypted JWTs with GreenfieldPQC. See sections below, and a related blog post at JPKusumi.com.
 
 ## Overview: Quantum Resistance Available Now  
 
@@ -36,7 +37,7 @@ For more commentary from Grok, see REVIEW.md and BENCHMARKS.md in the repo root.
 
 Via NuGet:
 ```
-dotnet add package GreenfieldPQC --version 1.0.2
+dotnet add package GreenfieldPQC --version 1.1.0
 ```
 Supports .NET 8+ and .NET 10. Bundles oqs.dll, a native dll, as a transitive dependency for supported platforms (win/linux/osx, x64/arm64). No additional configuration needed. Note that win-arm64 is not a supported platform.  
 
@@ -102,14 +103,13 @@ Assume Alice and Bob have a way to exchange data (e.g., via files or a network c
 
 #### Alice's Code (Generate Key Pair, Send Public Key, Receive Ciphertext, Derive Key, Encrypt Data)
 ```csharp
-
 using GreenfieldPQC.Cryptography;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
 // Step 1: Alice generates Kyber key pair
-var kem = CryptoFactory.CreateKyber(1024);
+var kem = CryptoFactory.CreateKyber(KyberSecurityLevel.ML_KEM_1024);  // Level 5 for highest security
 var (alicePublicKey, alicePrivateKey) = kem.GenerateKeyPair();
 
 // Send alicePublicKey to Bob (e.g., save to file)
@@ -141,7 +141,6 @@ File.WriteAllBytes("encrypted_data.bin", ciphertextWithTag);
 
 #### Bob's Code (Receive Public Key, Encapsulate, Send Ciphertext, Derive Key, Decrypt Data)
 ```csharp
-
 using GreenfieldPQC.Cryptography;
 using System.IO;
 using System.Security.Cryptography;
@@ -151,7 +150,7 @@ using System.Text;
 byte[] alicePublicKey = File.ReadAllBytes("alice_public_key.bin");
 
 // Create Kyber instance (same level as Alice)
-var kem = CryptoFactory.CreateKyber(1024);
+var kem = CryptoFactory.CreateKyber(KyberSecurityLevel.ML_KEM_1024);  // Level 5 for highest security
 
 // Encapsulate to get 256-bit shared secret and ciphertext
 var (sharedSecret256, ciphertext) = kem.Encapsulate(alicePublicKey);
@@ -208,8 +207,8 @@ API Highlights (Dilithium levels: 2, 3, 5):
 
 Round-Trip Example:
 ```csharp
-var jwsProvider = CryptoFactory.CreateJwsProvider(3);
-var (pubKey, privKey) = CryptoFactory.CreateDilithium(3).GenerateKeyPair();
+var jwsProvider = CryptoFactory.CreateJwsProvider(DilithiumSecurityLevel.ML_DSA_65);
+var (pubKey, privKey) = CryptoFactory.CreateDilithium(DilithiumSecurityLevel.ML_DSA_65).GenerateKeyPair();
 var payload = new { sub = "user123", exp = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds() };
 string jwsToken = jwsProvider.CreateJws(payload, privKey);
 var verified = jwsProvider.VerifyJws(jwsToken, pubKey) as dynamic;
@@ -232,8 +231,8 @@ API Highlights (Kyber levels: 1, 3, 5; Kusumi algorithm: Kusumi512 plain or Kusu
 
 Round-Trip Example:
 ```csharp
-var jweProvider = CryptoFactory.CreateJweProvider(3, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305);  // Level 3 Kyber, AEAD Kusumi
-var (pubKey, privKey) = CryptoFactory.CreateKyber(768).GenerateKeyPair();
+var jweProvider = CryptoFactory.CreateJweProvider(KyberSecurityLevel.ML_KEM_768, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305);  // Level 3 Kyber, AEAD Kusumi
+var (pubKey, privKey) = CryptoFactory.CreateKyber(KyberSecurityLevel.ML_KEM_768).GenerateKeyPair();
 var payload = new { sub = "user123", secret = "confidential" };
 string jweToken = jweProvider.CreateJwe(payload, pubKey);
 string decryptedJson = jweProvider.DecryptJwe(jweToken, privKey);
@@ -251,35 +250,46 @@ Kyber is a post-quantum key encapsulation mechanism (KEM) standardized by NIST a
 
 A key encapsulation mechanism (KEM) is a cryptographic primitive that enables two parties to securely establish a shared secret key over an insecure channel without transmitting the key itself. Unlike traditional key exchange methods like Diffie-Hellman, which are vulnerable to quantum computers via Shor's algorithm, Kyber uses lattice-based problems that remain hard for quantum adversaries.
 
-In practice, one party (the sender) uses the recipient's public key to generate a shared secret and a ciphertext (encapsulated key). The recipient then uses their private key to decapsulate the ciphertext and recover the same shared secret. The output is typically a 32-byte (256-bit) shared secret, which can be hashed (e.g., with SHA512) to derive longer symmetric keys. Key sizes vary by security level: for level 512, public keys are 800 bytes, private keys 1632 bytes, and ciphertexts 768 bytes; for 768, they are 1184, 2400, and 1088 bytes; for 1024, 1568, 3168, and 1568 bytes.
+In practice, one party (the sender) uses the recipient's public key to generate a shared secret and a ciphertext (encapsulated key). The recipient then uses their private key to decapsulate the ciphertext and recover the same shared secret. The output is typically a 32-byte (256-bit) shared secret, which can be hashed (e.g., with SHA512) to derive longer symmetric keys. Key sizes vary by security level: for level 1 (ML-KEM-512), public keys are 800 bytes, private keys 1632 bytes, and ciphertexts 768 bytes; for level 3 (ML-KEM-768), they are 1184, 2400, and 1088 bytes; for level 5 (ML-KEM-1024), 1568, 3168, and 1568 bytes.
 
 Common use cases include establishing session keys for secure communication protocols, replacing classical methods like ECDH in TLS handshakes, or bootstrapping symmetric encryption in hybrid cryptosystems. This ensures forward secrecy and quantum resistance for applications like secure messaging or VPNs.
 
 | Security Level | Public Key (pk) | Private Key (sk) | Ciphertext (ct) |
-|----------------|-----------------|------------------|-----------------|
-| 512           | 800 bytes      | 1632 bytes      | 768 bytes      |
-| 768           | 1184 bytes     | 2400 bytes      | 1088 bytes     |
-| 1024          | 1568 bytes     | 3168 bytes      | 1568 bytes     |
+| -------------- | --------------- | ---------------- | --------------- |
+| 1 (ML-KEM-512) | 800 bytes | 1632 bytes | 768 bytes |
+| 3 (ML-KEM-768) | 1184 bytes | 2400 bytes | 1088 bytes |
+| 5 (ML-KEM-1024) | 1568 bytes | 3168 bytes | 1568 bytes |
 
 ### In Practice
 
-**API Highlights** (Security levels: 512, 768, 1024):
-- `CryptoFactory.CreateKyber(level)`: Returns IKeyEncapsulationMechanism instance.
-- `IKeyEncapsulationMechanism.GenerateKeyPair()`: Returns (publicKey, privateKey).
-- `IKeyEncapsulationMechanism.Encapsulate(byte[] publicKey)`: Returns (sharedSecret, ciphertext).
-- `IKeyEncapsulationMechanism.Decapsulate(byte[] ciphertext, byte[] privateKey)`: Returns sharedSecret.
+**API Highlights** (Security levels: 1, 3, 5 via enum or direct parameters 512, 768, 1024):
 
-**Example** (using level 1024):
+- CryptoFactory.CreateKyber(KyberSecurityLevel level): Returns IKeyEncapsulationMechanism (enum: ML_KEM_512 = 1, ML_KEM_768 = 3, ML_KEM_1024 = 5).
+- CryptoFactory.CreateKyber(int parameter): Returns IKeyEncapsulationMechanism (parameter: 512, 768, 1024 for backward compatibility).
+- IKeyEncapsulationMechanism.GenerateKeyPair(): Returns (publicKey, privateKey).
+- IKeyEncapsulationMechanism.Encapsulate(byte[] publicKey): Returns (sharedSecret, ciphertext).
+- IKeyEncapsulationMechanism.Decapsulate(byte[] ciphertext, byte[] privateKey): Returns sharedSecret.
+
+**Example** (using enum for level 3 / ML-KEM-768):
 ```csharp
 using GreenfieldPQC.Cryptography;
 
-var kem = CryptoFactory.CreateKyber(1024);
+var kem = CryptoFactory.CreateKyber(KyberSecurityLevel.ML_KEM_768);
 var (pk, sk) = kem.GenerateKeyPair();
 var (ssSender, ct) = kem.Encapsulate(pk);
 byte[] ssReceiver = kem.Decapsulate(ct, sk);  // ssSender matches ssReceiver (use CryptographicOperations.FixedTimeEquals to verify)
 ```
 
-**Best Practices**: Use Kyber to replace quantum-vulnerable classical methods like ECDH for key exchange. Store private keys securely, e.g., in hardware security modules.
+For use with Kyber, it is good to know about this enum:
+```csharp
+public enum KyberSecurityLevel
+{
+    ML_KEM_512 = 1,
+    ML_KEM_768 = 3,
+    ML_KEM_1024 = 5
+}
+```
+**Best Practices**: Use Kyber to replace quantum-vulnerable classical methods like ECDH for key exchange. Store private keys securely, e.g., in hardware security modules. Prefer the enum overload for new code to align with NIST levels.
 
 ## Dilithium
 
@@ -299,28 +309,37 @@ Use cases include signing software updates, certificates in PKI, or documents fo
 | 3 (ML-DSA-65) | 1952 bytes     | 4032 bytes      | 3309 bytes     |
 | 5 (ML-DSA-87) | 2592 bytes     | 4896 bytes      | 4627 bytes     |
 
-
 ### In Practice
 
-**API Highlights** (Security levels: 2, 3, 5):
-- `CryptoFactory.CreateDilithium(level)`: Returns ISigner instance.
-- `ISigner.GenerateKeyPair()`: Returns (publicKey, privateKey).
-- `ISigner.Sign(byte[] message, byte[] privateKey)`: Returns signature.
-- `ISigner.Verify(byte[] message, byte[] signature, byte[] publicKey)`: Returns bool.
-- `ISigner.GetSignatureLength()`: Expected sig size.
+**API Highlights** (Security levels: 2, 3, 5 via enum or direct levels):
+- CryptoFactory.CreateDilithium(DilithiumSecurityLevel level): Returns ISigner (enum: ML_DSA_44 = 2, ML_DSA_65 = 3, ML_DSA_87 = 5).
+- CryptoFactory.CreateDilithium(int level): Returns ISigner (level: 2, 3, 5 for backward compatibility).
+- ISigner.GenerateKeyPair(): Returns (publicKey, privateKey).
+- ISigner.Sign(byte[] message, byte[] privateKey): Returns signature.
+- ISigner.Verify(byte[] message, byte[] signature, byte[] publicKey): Returns bool.
+- ISigner.GetSignatureLength(): Expected sig size.
 
-**Example** (using level 5):
+**Example** (using enum for level 3 / ML-DSA-65):
 ```csharp
 using GreenfieldPQC.Cryptography;
 
-var signer = CryptoFactory.CreateDilithium(5);
+var signer = CryptoFactory.CreateDilithium(DilithiumSecurityLevel.ML_DSA_65);
 var (pubKey, privKey) = signer.GenerateKeyPair();
 byte[] message = Encoding.UTF8.GetBytes("Sign me");
 byte[] sig = signer.Sign(message, privKey);
 bool valid = signer.Verify(message, sig, pubKey);  // true
 ```
 
-**Best Practices**: Hash messages first if large; use for certificates or code signing.
+For use with Dilithium, it is good to know about this enum:
+```csharp
+public enum DilithiumSecurityLevel
+{
+    ML_DSA_44 = 2,
+    ML_DSA_65 = 3,
+    ML_DSA_87 = 5
+}
+```
+**Best Practices**: Hash messages first if large; use for certificates or code signing. Prefer the enum overload for new code to align with NIST levels.
 
 ## Kusumi512
 
@@ -477,7 +496,18 @@ Static factory for keys, nonces, and instances.
 - **CreateJwsProvider(int dilithiumLevel = 3)**: Returns IJwsProvider for post-quantum signed JWTs (Dilithium levels: 2, 3, 5).
 - **CreateJweProvider(int kyberLevel = 3, CipherAlgorithm kusumiAlgorithm = CipherAlgorithm.Kusumi512)**: Returns IJweProvider for post-quantum encrypted JWTs (Kyber levels: 1, 3, 5; Kusumi: Kusumi512 or Kusumi512Poly1305).
 
-Supported Algorithms (Enum: `CipherAlgorithm`): Kusumi512, Kusumi512Poly1305, Kyber, Dilithium, SHA256, SHA512.
+For use with CryptoFactory, it is good to know about this enum:
+```csharp
+public enum CipherAlgorithm
+{
+    Kusumi512,
+    Kusumi512Poly1305,
+    Kyber,
+    Dilithium,
+    SHA256,
+    SHA512
+}
+```
 
 ### IKeyEncapsulationMechanism (for Kyber)
 Interface for key encapsulation operations (useful for mocking/testing).
@@ -530,12 +560,12 @@ Interface for JSON Web Encryption operations (useful for mocking/testing).
 
 
 ## Resources and Community
-For more information, blog posts, and updates on this and other JP Kusumi creations, visit the [JPKusumi.com](https://jpkusumi.com). Recent blog posts include:
+For more information, blog posts, and updates on this and other JP Kusumi creations, visit [JPKusumi.com](https://jpkusumi.com). Recent blog posts include:
 - Key and nonce management best practices.
 - Handling cryptographic metadata securely.
 - Quantum-safe JWTs with GreenfieldPQC.
 
-JPKusumi.com aims to be a resource for developers. There is also a discussion forum, open in the [GitHub repo for GreenfieldPQC](https://github.com/JPKusumi/GreenfieldPQC/discussions). Comments and feedback may be directed there.
+JPKusumi.com aims to be a resource for developers. There is also a discussion forum, open in the [GitHub repo for GreenfieldPQC](https://github.com/JPKusumi/GreenfieldPQC/discussions). Go there with questions, comments, and feedback. Happy coding!
 
 ### License
 MIT License

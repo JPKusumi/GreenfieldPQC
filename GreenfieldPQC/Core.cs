@@ -28,7 +28,18 @@ namespace GreenfieldPQC.Cryptography
             SHA256,
             SHA512
         }
-
+        public enum KyberSecurityLevel
+        {
+            ML_KEM_512 = 1,
+            ML_KEM_768 = 3,
+            ML_KEM_1024 = 5
+        }
+        public enum DilithiumSecurityLevel
+        {
+            ML_DSA_44 = 2,
+            ML_DSA_65 = 3,
+            ML_DSA_87 = 5
+        }
         public static byte[] GenerateKey(CipherAlgorithm algorithm)
         {
             return algorithm switch
@@ -94,16 +105,47 @@ namespace GreenfieldPQC.Cryptography
             Rng.GetBytes(bytes);
             return bytes;
         }
-        public static IKeyEncapsulationMechanism CreateKyber(int level)
+        // Overload for old usage (direct parameter: 512, 768, 1024)
+        public static IKeyEncapsulationMechanism CreateKyber(int parameter)
         {
-            return new Kyber(new KyberParameters(level));
+            if (parameter != 512 && parameter != 768 && parameter != 1024)
+                throw new ArgumentException("Invalid parameter (512, 768, or 1024).", nameof(parameter));
+            return new Kyber(new KyberParameters(parameter));
         }
 
+        // New overload for security levels (1, 3, 5)
+        public static IKeyEncapsulationMechanism CreateKyber(KyberSecurityLevel level)
+        {
+            int parameter = level switch
+            {
+                KyberSecurityLevel.ML_KEM_512 => 512,
+                KyberSecurityLevel.ML_KEM_768 => 768,
+                KyberSecurityLevel.ML_KEM_1024 => 1024,
+                _ => throw new ArgumentOutOfRangeException(nameof(level), "Invalid Kyber security level.")
+            };
+            return new Kyber(new KyberParameters(parameter));
+        }
+
+        // Overload for old usage (direct level: 2, 3, 5)
         public static ISigner CreateDilithium(int level)
         {
+            if (level != 2 && level != 3 && level != 5)
+                throw new ArgumentException("Invalid level (2, 3, or 5).", nameof(level));
             return new Dilithium(new DilithiumParameters(level));
         }
 
+        // New overload for security levels (enum)
+        public static ISigner CreateDilithium(DilithiumSecurityLevel level)
+        {
+            int dilithiumLevel = level switch
+            {
+                DilithiumSecurityLevel.ML_DSA_44 => 2,
+                DilithiumSecurityLevel.ML_DSA_65 => 3,
+                DilithiumSecurityLevel.ML_DSA_87 => 5,
+                _ => throw new ArgumentOutOfRangeException(nameof(level), "Invalid Dilithium security level.")
+            };
+            return new Dilithium(new DilithiumParameters(dilithiumLevel));
+        }
         public static SHA256 CreateSHA256()
         {
             return SHA256.Create();
