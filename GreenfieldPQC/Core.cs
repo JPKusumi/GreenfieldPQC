@@ -177,10 +177,21 @@ namespace GreenfieldPQC.Cryptography
             var kem = CreateKyber(kyberParam);  // Pass the mapped parameter
             return new JweProvider(kem, kusumiAlgorithm);
         }
+
+        public static IJweProvider CreateJweProvider(KyberSecurityLevel kyberLevel = KyberSecurityLevel.ML_KEM_768, CipherAlgorithm kusumiAlgorithm = CipherAlgorithm.Kusumi512)
+        {
+            return CreateJweProvider((int)kyberLevel, kusumiAlgorithm);  // Calls the int overload
+        }
+
         public static IJwsProvider CreateJwsProvider(int dilithiumLevel = 3)  // Level: 2 (44), 3 (65), 5 (87)
         {
             var signer = CreateDilithium(dilithiumLevel);  // Existing factory for ML-DSA
             return new JwsProvider(signer);
+        }
+        // New overload for enum
+        public static IJwsProvider CreateJwsProvider(DilithiumSecurityLevel dilithiumLevel = DilithiumSecurityLevel.ML_DSA_65)
+        {
+            return CreateJwsProvider((int)dilithiumLevel);  // Calls the int overload
         }
     }
 
