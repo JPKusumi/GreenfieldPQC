@@ -5,6 +5,10 @@ All notable changes to GreenfieldPQC will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+As of February 6, 2026, v1.1.1 was released with minor fixes.
+
+As of February 5, 2026, v1.1.0 was released with new features: quantum safe JWS and JWE creation and verification for JWTs
+
 As of August 30, 2025, a test vector in the TECHNICAL_SPEC.md was updated.
 
 As of August 6, 2025, the README improved again.
