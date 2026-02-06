@@ -1091,9 +1091,14 @@ namespace GreenfieldPQC.Tests
             var signer = CryptoFactory.CreateDilithium(3);
             var (pub, _) = signer.GenerateKeyPair();
 
-            // Act & Assert
+            // Act & Assert - Wrong number of parts
             Assert.Throws<ArgumentException>(() => provider.VerifyJws("invalid.token", pub));
-            Assert.Throws<ArgumentException>(() => provider.VerifyJws("only.two.parts", pub));
+            Assert.Throws<ArgumentException>(() => provider.VerifyJws("only.one", pub));
+            Assert.Throws<ArgumentException>(() => provider.VerifyJws("too.many.parts.here", pub));
+            
+            // Invalid Base64 in parts (has 3 parts but invalid Base64)
+            Assert.Throws<FormatException>(() => provider.VerifyJws("not!valid.base64!.here!", pub));
+            
             Log("JwsProvider_VerifyJws_InvalidFormat_ThrowsException passed");
         }
 
