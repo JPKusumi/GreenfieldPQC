@@ -800,5 +800,368 @@ namespace GreenfieldPQC.Tests
             Assert.Equal(12, nonce.Length);
             Log("CryptoFactory_GenerateNonce_Kusumi512_Returns12Bytes passed");
         }
+
+        // ========== ENUM API TESTS (v1.1.0+) ==========
+
+        [Theory]
+        [InlineData(KyberSecurityLevel.ML_KEM_512, "ML-KEM-512")]
+        [InlineData(KyberSecurityLevel.ML_KEM_768, "ML-KEM-768")]
+        [InlineData(KyberSecurityLevel.ML_KEM_1024, "ML-KEM-1024")]
+        public void CreateKyber_WithEnum_ReturnsCorrectAlgorithm(KyberSecurityLevel level, string expectedAlgorithmName)
+        {
+            // Act
+            var kyber = CryptoFactory.CreateKyber(level);
+
+            // Assert
+            Assert.IsType<Kyber>(kyber);
+            Assert.Equal(expectedAlgorithmName, kyber.AlgorithmName);
+            Log($"CreateKyber_WithEnum_{level}_Returns{expectedAlgorithmName} passed");
+        }
+
+        [Theory]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_44, "ML-DSA-44")]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_65, "ML-DSA-65")]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_87, "ML-DSA-87")]
+        public void CreateDilithium_WithEnum_ReturnsCorrectAlgorithm(DilithiumSecurityLevel level, string expectedAlgorithmName)
+        {
+            // Act
+            var dilithium = CryptoFactory.CreateDilithium(level);
+
+            // Assert
+            Assert.IsType<Dilithium>(dilithium);
+            Assert.Equal(expectedAlgorithmName, dilithium.AlgorithmName);
+            Log($"CreateDilithium_WithEnum_{level}_Returns{expectedAlgorithmName} passed");
+        }
+
+        [Theory]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_44)]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_65)]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_87)]
+        public void CreateJwsProvider_WithEnum_CreatesValidProvider(DilithiumSecurityLevel level)
+        {
+            // Arrange
+            var jwsProvider = CryptoFactory.CreateJwsProvider(level);
+            var signer = CryptoFactory.CreateDilithium(level);
+            var (publicKey, privateKey) = signer.GenerateKeyPair();
+            var payload = new { test = "enum-api", level = level.ToString() };
+
+            // Act
+            string jwsToken = jwsProvider.CreateJws(payload, privateKey);
+            dynamic verifiedPayload = jwsProvider.VerifyJws(jwsToken, publicKey);
+
+            // Assert
+            Assert.NotNull(jwsToken);
+            Assert.Equal(3, jwsToken.Split('.').Length);
+            Assert.Equal("enum-api", verifiedPayload.test);
+            Assert.Equal(level.ToString(), verifiedPayload.level);
+            Log($"CreateJwsProvider_WithEnum_{level}_CreatesValidProvider passed");
+        }
+
+        [Theory]
+        [InlineData(KyberSecurityLevel.ML_KEM_512, CipherAlgorithm.Kusumi512)]
+        [InlineData(KyberSecurityLevel.ML_KEM_768, CipherAlgorithm.Kusumi512Poly1305)]
+        [InlineData(KyberSecurityLevel.ML_KEM_1024, CipherAlgorithm.Kusumi512)]
+        public void CreateJweProvider_WithEnum_CreatesValidProvider(KyberSecurityLevel level, CipherAlgorithm cipher)
+        {
+            // Arrange
+            var jweProvider = CryptoFactory.CreateJweProvider(level, cipher);
+            var kem = CryptoFactory.CreateKyber(level);
+            var (publicKey, privateKey) = kem.GenerateKeyPair();
+            var payload = new { test = "enum-api", level = level.ToString() };
+
+            // Act
+            string jweToken = jweProvider.CreateJwe(payload, publicKey);
+            string decryptedJson = jweProvider.DecryptJwe(jweToken, privateKey);
+            JsonElement decryptedElement = JsonSerializer.Deserialize<JsonElement>(decryptedJson);
+
+            // Assert
+            Assert.NotNull(jweToken);
+            Assert.Equal(5, jweToken.Split('.').Length);
+            Assert.Equal("enum-api", decryptedElement.GetProperty("test").GetString());
+            Assert.Equal(level.ToString(), decryptedElement.GetProperty("level").GetString());
+            Log($"CreateJweProvider_WithEnum_{level}_{cipher}_CreatesValidProvider passed");
+        }
+
+        [Fact]
+        public void JwsJweNesting_WithEnums_RoundTrip()
+        {
+            // Arrange - Use enum API exclusively
+            var dilithiumLevel = DilithiumSecurityLevel.ML_DSA_65;
+            var kyberLevel = KyberSecurityLevel.ML_KEM_768;
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
+
+            IJwsProvider jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
+            IJweProvider jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+
+            var (signPubKey, signPrivKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair();
+            var (encPubKey, encPrivKey) = CryptoFactory.CreateKyber(kyberLevel).GenerateKeyPair();
+
+            var originalPayload = new { sub = "enum-user", secret = "enum confidential", iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds() };
+
+            // Act - Create inner JWS
+            string innerJws = jwsProvider.CreateJws(originalPayload, signPrivKey);
+
+            // Encrypt the JWS as JWE payload (nesting)
+            string nestedToken = jweProvider.CreateJwe(innerJws, encPubKey);
+
+            // Decrypt outer JWE to get inner JWS
+            string decryptedJws = jweProvider.DecryptJwe(nestedToken, encPrivKey);
+
+            // Verify inner JWS to get original payload
+            dynamic verifiedPayload = jwsProvider.VerifyJws(decryptedJws, signPubKey);
+
+            // Assert
+            Assert.NotNull(nestedToken);
+            Assert.Equal(5, nestedToken.Split('.').Length);  // JWE format
+            Assert.Equal(3, decryptedJws.Split('.').Length);  // Inner JWS format
+            Assert.Equal(originalPayload.sub, verifiedPayload.sub);
+            Assert.Equal(originalPayload.secret, verifiedPayload.secret);
+
+            Log("JwsJweNesting_WithEnums_RoundTrip passed");
+        }
+
+        [Fact]
+        public void EnumAndIntAPI_ProduceSameResults()
+        {
+            // Arrange
+            var payload = new { test = "compatibility" };
+
+            // Create with int API
+            var jwsProviderInt = CryptoFactory.CreateJwsProvider(3);
+            var signerInt = CryptoFactory.CreateDilithium(3);
+            var (pubKeyInt, privKeyInt) = signerInt.GenerateKeyPair();
+
+            // Create with enum API
+            var jwsProviderEnum = CryptoFactory.CreateJwsProvider(DilithiumSecurityLevel.ML_DSA_65);
+            var signerEnum = CryptoFactory.CreateDilithium(DilithiumSecurityLevel.ML_DSA_65);
+
+            // Act - Create JWS with int API
+            string jwsTokenInt = jwsProviderInt.CreateJws(payload, privKeyInt);
+
+            // Verify with enum API's signer (cross-compatibility test)
+            dynamic verifiedWithEnum = jwsProviderEnum.VerifyJws(jwsTokenInt, pubKeyInt);
+
+            // Assert
+            Assert.Equal("compatibility", verifiedWithEnum.test);
+            Log("EnumAndIntAPI_ProduceSameResults passed");
+        }
+
+        [Theory]
+        [InlineData(KyberSecurityLevel.ML_KEM_512, 512)]
+        [InlineData(KyberSecurityLevel.ML_KEM_768, 768)]
+        [InlineData(KyberSecurityLevel.ML_KEM_1024, 1024)]
+        public void KyberParameters_WithEnum_MapsToCorrectIntValue(KyberSecurityLevel enumLevel, int expectedIntValue)
+        {
+            // Act
+            var parameters = new KyberParameters(enumLevel);
+
+            // Assert
+            Assert.Equal(expectedIntValue, parameters.SecurityLevel);
+            Log($"KyberParameters_WithEnum_{enumLevel}_MapsTo{expectedIntValue} passed");
+        }
+
+        [Theory]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_44, 2)]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_65, 3)]
+        [InlineData(DilithiumSecurityLevel.ML_DSA_87, 5)]
+        public void DilithiumParameters_WithEnum_MapsToCorrectIntValue(DilithiumSecurityLevel enumLevel, int expectedIntValue)
+        {
+            // Act
+            var parameters = new DilithiumParameters(enumLevel);
+
+            // Assert
+            Assert.Equal(expectedIntValue, parameters.SecurityLevel);
+            Log($"DilithiumParameters_WithEnum_{enumLevel}_MapsTo{expectedIntValue} passed");
+        }
+
+        // ========== FACTORY METHOD UNIT TESTS ==========
+
+        [Fact]
+        public void CreateJwsProvider_WithIntLevel_ReturnsValidProvider()
+        {
+            // Act
+            var provider = CryptoFactory.CreateJwsProvider(3);
+
+            // Assert
+            Assert.NotNull(provider);
+            Assert.IsAssignableFrom<IJwsProvider>(provider);
+            Log("CreateJwsProvider_WithIntLevel_ReturnsValidProvider passed");
+        }
+
+        [Fact]
+        public void CreateJwsProvider_WithEnumLevel_ReturnsValidProvider()
+        {
+            // Act
+            var provider = CryptoFactory.CreateJwsProvider(DilithiumSecurityLevel.ML_DSA_65);
+
+            // Assert
+            Assert.NotNull(provider);
+            Assert.IsAssignableFrom<IJwsProvider>(provider);
+            Log("CreateJwsProvider_WithEnumLevel_ReturnsValidProvider passed");
+        }
+
+        [Theory]
+        [InlineData(1)]  // Invalid Dilithium level
+        [InlineData(4)]  // Invalid Dilithium level
+        [InlineData(10)] // Invalid Dilithium level
+        public void CreateJwsProvider_InvalidLevel_ThrowsException(int level)
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => CryptoFactory.CreateJwsProvider(level));
+            Log($"CreateJwsProvider_InvalidLevel_{level}_ThrowsException passed");
+        }
+
+        [Fact]
+        public void CreateJweProvider_WithIntLevelAndCipher_ReturnsValidProvider()
+        {
+            // Act
+            var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512);
+
+            // Assert
+            Assert.NotNull(provider);
+            Assert.IsAssignableFrom<IJweProvider>(provider);
+            Log("CreateJweProvider_WithIntLevelAndCipher_ReturnsValidProvider passed");
+        }
+
+        [Fact]
+        public void CreateJweProvider_WithEnumLevelAndCipher_ReturnsValidProvider()
+        {
+            // Act
+            var provider = CryptoFactory.CreateJweProvider(KyberSecurityLevel.ML_KEM_768, CipherAlgorithm.Kusumi512Poly1305);
+
+            // Assert
+            Assert.NotNull(provider);
+            Assert.IsAssignableFrom<IJweProvider>(provider);
+            Log("CreateJweProvider_WithEnumLevelAndCipher_ReturnsValidProvider passed");
+        }
+
+        [Theory]
+        [InlineData(0)]  // Invalid Kyber level
+        [InlineData(2)]  // Invalid Kyber level
+        [InlineData(4)]  // Invalid Kyber level
+        public void CreateJweProvider_InvalidLevel_ThrowsException(int level)
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentOutOfRangeException>(() => 
+                CryptoFactory.CreateJweProvider(level, CipherAlgorithm.Kusumi512));
+            Log($"CreateJweProvider_InvalidLevel_{level}_ThrowsException passed");
+        }
+
+        [Theory]
+        [InlineData(CipherAlgorithm.Kusumi512)]
+        [InlineData(CipherAlgorithm.Kusumi512Poly1305)]
+        public void CreateJweProvider_DifferentCipherAlgorithms_WorkCorrectly(CipherAlgorithm algorithm)
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJweProvider(3, algorithm);
+            var kem = CryptoFactory.CreateKyber(768);
+            var (pub, priv) = kem.GenerateKeyPair();
+            var payload = new { cipher = algorithm.ToString() };
+
+            // Act
+            string token = provider.CreateJwe(payload, pub);
+            string decrypted = provider.DecryptJwe(token, priv);
+
+            // Assert
+            Assert.Contains(algorithm.ToString(), decrypted);
+            Log($"CreateJweProvider_DifferentCipherAlgorithms_{algorithm}_WorkCorrectly passed");
+        }
+
+        // ========== ERROR HANDLING TESTS ==========
+
+        [Fact]
+        public void JweProvider_DecryptJwe_InvalidFormat_ThrowsException()
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512);
+            var kem = CryptoFactory.CreateKyber(768);
+            var (_, priv) = kem.GenerateKeyPair();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => provider.DecryptJwe("invalid.token", priv));
+            Assert.Throws<ArgumentException>(() => provider.DecryptJwe("only.two.parts", priv));
+            Log("JweProvider_DecryptJwe_InvalidFormat_ThrowsException passed");
+        }
+
+        [Fact]
+        public void JwsProvider_VerifyJws_InvalidFormat_ThrowsException()
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJwsProvider(3);
+            var signer = CryptoFactory.CreateDilithium(3);
+            var (pub, _) = signer.GenerateKeyPair();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => provider.VerifyJws("invalid.token", pub));
+            Assert.Throws<ArgumentException>(() => provider.VerifyJws("only.two.parts", pub));
+            Log("JwsProvider_VerifyJws_InvalidFormat_ThrowsException passed");
+        }
+
+        [Fact]
+        public void JweProvider_CreateJwe_LargePayload_RoundTrip()
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512Poly1305);
+            var kem = CryptoFactory.CreateKyber(768);
+            var (pub, priv) = kem.GenerateKeyPair();
+            
+            // Create a large payload (10KB of text)
+            var largeText = new string('x', 10000);
+            var payload = new { data = largeText };
+
+            // Act
+            string token = provider.CreateJwe(payload, pub);
+            string decrypted = provider.DecryptJwe(token, priv);
+            JsonElement element = JsonSerializer.Deserialize<JsonElement>(decrypted);
+
+            // Assert
+            Assert.Equal(largeText, element.GetProperty("data").GetString());
+            Log("JweProvider_CreateJwe_LargePayload_RoundTrip passed");
+        }
+
+        [Fact]
+        public void JwsProvider_CreateJws_UnicodePayload_RoundTrip()
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJwsProvider(3);
+            var signer = CryptoFactory.CreateDilithium(3);
+            var (pub, priv) = signer.GenerateKeyPair();
+            var payload = new { message = "Hello ?? ?? ????? ??????" };
+
+            // Act
+            string token = provider.CreateJws(payload, priv);
+            dynamic verified = provider.VerifyJws(token, pub);
+
+            // Assert
+            Assert.Equal("Hello ?? ?? ????? ??????", verified.message);
+            Log("JwsProvider_CreateJws_UnicodePayload_RoundTrip passed");
+        }
+
+        [Fact]
+        public void JweProvider_CreateJwe_ComplexNestedPayload_RoundTrip()
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512);
+            var kem = CryptoFactory.CreateKyber(768);
+            var (pub, priv) = kem.GenerateKeyPair();
+            var payload = new
+            {
+                user = new { id = 123, name = "Test" },
+                roles = new[] { "admin", "user" },
+                metadata = new { created = DateTimeOffset.UtcNow.ToUnixTimeSeconds() }
+            };
+
+            // Act
+            string token = provider.CreateJwe(payload, pub);
+            string decrypted = provider.DecryptJwe(token, priv);
+            JsonElement element = JsonSerializer.Deserialize<JsonElement>(decrypted);
+
+            // Assert
+            Assert.Equal(123, element.GetProperty("user").GetProperty("id").GetInt32());
+            Assert.Equal("Test", element.GetProperty("user").GetProperty("name").GetString());
+            Assert.Equal(2, element.GetProperty("roles").GetArrayLength());
+            Assert.Equal("admin", element.GetProperty("roles")[0].GetString());
+            Log("JweProvider_CreateJwe_ComplexNestedPayload_RoundTrip passed");
+        }
     }
 }
