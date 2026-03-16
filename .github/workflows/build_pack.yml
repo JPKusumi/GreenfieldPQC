@@ -6,6 +6,7 @@ on:
     tags: [ 'v*' ]  # Triggers on tags like v1.0.1, but publish is manual
   pull_request:
     branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from the GitHub Actions UI
 
 jobs:
   build-natives:
@@ -77,6 +78,65 @@ jobs:
             cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic
           fi
           ninja
+
+      - name: Validate liboqs symbols (Linux)
+        if: runner.os == 'Linux'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Checking for required OQS symbols in ${LIB} ==="
+          REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
+          MISSING=""
+          for sym in $REQUIRED_SYMBOLS; do
+            if ! nm -D "${LIB}" 2>/dev/null | grep -q " T ${sym}$"; then
+              MISSING="${MISSING} ${sym}"
+            fi
+          done
+          if [ -n "${MISSING}" ]; then
+            echo "ERROR: Missing required exported symbols:${MISSING}"
+            echo "--- All OQS symbols found ---"
+            nm -D "${LIB}" | grep OQS || true
+            exit 1
+          fi
+          echo "All required symbols present."
+
+      - name: Validate liboqs deps (Linux native only)
+        if: runner.os == 'Linux' && matrix.config.rid != 'linux-arm64'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Checking shared library dependencies (ldd) for ${LIB} ==="
+          ldd "${LIB}"
+          if ldd "${LIB}" 2>&1 | grep -q "not found"; then
+            echo "ERROR: One or more shared library dependencies were not found (see ldd output above)."
+            exit 1
+          fi
+          echo "All dependencies resolved."
+
+      - name: Validate liboqs symbols and deps (macOS)
+        if: runner.os == 'macOS'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Checking shared library dependencies (otool -L) for ${LIB} ==="
+          otool -L "${LIB}"
+          echo ""
+          echo "=== Checking for required OQS symbols in ${LIB} ==="
+          REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
+          MISSING=""
+          for sym in $REQUIRED_SYMBOLS; do
+            # macOS nm -gU output uses '_SYMBOL' prefix for C symbols; match at end of line
+            if ! nm -gU "${LIB}" 2>/dev/null | grep -q "${sym}$"; then
+              MISSING="${MISSING} ${sym}"
+            fi
+          done
+          if [ -n "${MISSING}" ]; then
+            echo "ERROR: Missing required exported symbols:${MISSING}"
+            echo "--- All OQS symbols found ---"
+            nm -gU "${LIB}" | grep OQS || true
+            exit 1
+          fi
+          echo "All required symbols present."
 
       - name: Copy lib to standard location (Windows)
         if: runner.os == 'Windows'
