@@ -45,20 +45,37 @@ jobs:
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
 
+      - name: "Patch liboqs (Windows ARM64) - disable AES-NI source selection"
+        if: matrix.config.rid == 'win-arm64'
+        working-directory: liboqs
+        shell: pwsh
+        run: |
+          $file = "src/common/CMakeLists.txt"
+          if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
+
+          $content = Get-Content $file -Raw
+
+          # Force the AES-NI selection branch OFF by rewriting the condition.
+          # Original (observed): if (OQS_DIST_X86_64_BUILD OR OQS_USE_AES_INSTRUCTIONS)
+          # Patched:            if (FALSE)
+          $patched = $content -replace 'if\s*\(\s*OQS_DIST_X86_64_BUILD\s+OR\s+OQS_USE_AES_INSTRUCTIONS\s*\)', 'if (FALSE)'
+
+          if ($patched -eq $content) {
+            Write-Host "ERROR: Expected condition not found; dumping first 120 lines:"
+            Get-Content $file | Select-Object -First 120 | ForEach-Object { $_ }
+            throw "Patch did not apply (liboqs CMakeLists.txt changed)."
+          }
+
+          Set-Content -Path $file -Value $patched -Encoding UTF8
+          Write-Host "Applied patch to $file. Verifying:"
+          Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,2
+
       - name: Diagnostics (Windows ARM64)
         if: matrix.config.rid == 'win-arm64'
         shell: pwsh
         run: |
           Write-Host "=== CMake version ==="
           cmake --version
-
-          Write-Host "=== Visual Studio installations (vswhere) ==="
-          $vsWhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
-          if (Test-Path $vsWhere) {
-            & $vsWhere -latest -format json
-          } else {
-            Write-Host "vswhere.exe not found at expected path"
-          }
 
           Write-Host "=== CL compiler location ==="
           where.exe cl 2>&1 || Write-Host "cl.exe not found in PATH"
@@ -114,6 +131,8 @@ jobs:
             Write-Host "=== win-arm64: adding __NO_AESNI__ define via CMAKE_*_FLAGS ==="
             $cmakeArgs += "-DCMAKE_C_FLAGS=/D__NO_AESNI__"
             $cmakeArgs += "-DCMAKE_CXX_FLAGS=/D__NO_AESNI__"
+
+            # These may or may not be honored by liboqs depending on version, but are harmless to pass.
             $cmakeArgs += "-DOQS_DIST_X86_64_BUILD=OFF"
             $cmakeArgs += "-DOQS_DIST_ARM64_V8_BUILD=ON"
           }
