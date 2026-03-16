@@ -45,32 +45,6 @@ jobs:
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
 
-      - name: "Patch liboqs (Windows ARM64) - skip AES-NI sources"
-        if: matrix.config.rid == 'win-arm64'
-        working-directory: liboqs
-        shell: pwsh
-        run: |
-          $file = "src/common/CMakeLists.txt"
-          if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
-
-          $content = Get-Content $file -Raw
-          $orig = $content
-
-          # Comment out AES-NI sources for win-arm64 (they pull x86 intrinsics headers).
-          # This is an experimental CI-only patch; it does not change your repo sources.
-          $content = $content -replace '(?m)^\s*[^#\r\n]*aes128_ni\.c\s*$', '  # aes128_ni.c  (disabled for win-arm64)'
-          $content = $content -replace '(?m)^\s*[^#\r\n]*aes256_ni\.c\s*$', '  # aes256_ni.c  (disabled for win-arm64)'
-
-          if ($content -eq $orig) {
-            Write-Host "WARNING: Patch made no changes. Attempting to show context around aes*_ni.c:"
-            Select-String -Path $file -Pattern "aes128_ni\.c|aes256_ni\.c" -Context 2,2
-            throw "Patch did not apply cleanly; liboqs CMakeLists format changed."
-          }
-
-          Set-Content -Path $file -Value $content -Encoding UTF8
-          Write-Host "=== Patched src/common/CMakeLists.txt (matches) ==="
-          Select-String -Path $file -Pattern "aes128_ni\.c|aes256_ni\.c|disabled for win-arm64" -Context 0,1
-
       - name: Diagnostics (Windows ARM64)
         if: matrix.config.rid == 'win-arm64'
         shell: pwsh
@@ -140,6 +114,8 @@ jobs:
             Write-Host "=== win-arm64: adding __NO_AESNI__ define via CMAKE_*_FLAGS ==="
             $cmakeArgs += "-DCMAKE_C_FLAGS=/D__NO_AESNI__"
             $cmakeArgs += "-DCMAKE_CXX_FLAGS=/D__NO_AESNI__"
+            $cmakeArgs += "-DOQS_DIST_X86_64_BUILD=OFF"
+            $cmakeArgs += "-DOQS_DIST_ARM64_V8_BUILD=ON"
           }
 
           cmake @cmakeArgs
