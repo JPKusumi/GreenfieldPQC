@@ -45,7 +45,7 @@ jobs:
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
 
-      - name: Patch liboqs: skip AES-NI sources (Windows ARM64)
+      - name: "Patch liboqs (Windows ARM64) - skip AES-NI sources"
         if: matrix.config.rid == 'win-arm64'
         working-directory: liboqs
         shell: pwsh
@@ -79,7 +79,7 @@ jobs:
           cmake --version
 
           Write-Host "=== Visual Studio installations (vswhere) ==="
-          $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsWhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
           if (Test-Path $vsWhere) {
             & $vsWhere -latest -format json
           } else {
