@@ -15,7 +15,7 @@ jobs:
       matrix:
         config:
           - { os: windows-latest, arch: x64,   rid: win-x64,   libname: oqs.dll }
-          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental: cross-compile for Windows ARM64
+          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental
           - { os: ubuntu-22.04,   arch: x64,   rid: linux-x64, libname: liboqs.so }
           - { os: ubuntu-22.04,   arch: arm64, rid: linux-arm64, libname: liboqs.so }
           - { os: macos-latest,   arch: x64,   rid: osx-x64,   libname: liboqs.dylib }
@@ -31,18 +31,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-          echo "=== ninja ==="
           ninja --version
-          echo "=== cmake ==="
           cmake --version
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
-          echo "=== ninja ==="
           ninja --version
-          echo "=== cmake ==="
           cmake --version
 
       - name: Setup Visual Studio environment (Windows)
@@ -67,43 +63,41 @@ jobs:
           $patched = $content -replace 'if\s*\(\s*OQS_DIST_X86_64_BUILD\s+OR\s+OQS_USE_AES_INSTRUCTIONS\s*\)', 'if (FALSE)'
 
           if ($patched -eq $content) {
-            Write-Host "ERROR: expected AES-NI selection condition not found."
             Select-String -Path $file -Pattern "OQS_DIST_X86_64_BUILD|OQS_USE_AES_INSTRUCTIONS|aes128_ni\.c|aes256_ni\.c" -Context 1,1
             throw "AES-NI patch did not apply."
           }
 
           Set-Content -Path $file -Value $patched -Encoding UTF8
-          Write-Host "=== AES-NI patch applied (verification) ==="
           Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,3
 
-      - name: "Patch liboqs (win-arm64) - disable Keccak times4 AVX2 (immintrin)"
+      - name: "Patch liboqs (win-arm64) - remove all immintrin.h includes under src/common"
         if: runner.os == 'Windows' && matrix.config.arch == 'arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
-          Write-Host "=== Patching liboqs to disable Keccak times4 AVX2 sources (win-arm64) ==="
-          $file = "src/common/sha3/xkcp_low/CMakeLists.txt"
-          if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
+          Write-Host "=== Removing all immintrin.h includes under src/common (win-arm64) ==="
 
-          $content = Get-Content $file -Raw
-          $orig = $content
+          $files = Get-ChildItem -Recurse src/common -Include *.c,*.h
+          $changed = 0
 
-          # Comment out any lines that reference the AVX2/SIMD256 times4 implementation.
-          # This is intentionally broad to survive upstream refactors.
-          $content = $content -replace '(?m)^\s*(.*KeccakP-1600times4.*avx2.*)$', '# $1  # disabled for win-arm64'
-          $content = $content -replace '(?m)^\s*(.*KeccakP-1600-times4-SIMD256\.c.*)$', '# $1  # disabled for win-arm64'
-          $content = $content -replace '(?m)^\s*(.*SIMD256.*KeccakP-1600.*times4.*)$', '# $1  # disabled for win-arm64'
-          $content = $content -replace '(?m)^\s*(.*\/avx2\/.*KeccakP-1600.*times4.*)$', '# $1  # disabled for win-arm64'
-
-          if ($content -eq $orig) {
-            Write-Host "WARNING: no changes made to xkcp_low/CMakeLists.txt; showing matches to help update patch:"
-            Select-String -Path $file -Pattern "KeccakP-1600times4|SIMD256|avx2|times4" -Context 1,1
-            throw "Keccak AVX2 patch did not apply."
+          foreach ($f in $files) {
+            $p = $f.FullName
+            $c = Get-Content $p -Raw
+            $c2 = $c -replace '(?m)^\s*#\s*include\s*[<"]immintrin\.h[>"]\s*$', '/* immintrin.h disabled for win-arm64 CI experiment */'
+            if ($c2 -ne $c) {
+              Set-Content -Path $p -Value $c2 -Encoding UTF8
+              $changed++
+            }
           }
 
-          Set-Content -Path $file -Value $content -Encoding UTF8
-          Write-Host "=== Keccak AVX2 patch applied (verification) ==="
-          Select-String -Path $file -Pattern "disabled for win-arm64|KeccakP-1600times4|SIMD256|avx2" -Context 0,1
+          Write-Host ("Patched {0} files" -f $changed)
+
+          Write-Host "=== Remaining immintrin.h references (should be none) ==="
+          $hits = $files | Select-String -Pattern "immintrin\.h" -List
+          if ($hits) {
+            $hits | ForEach-Object { Write-Host ("HIT: {0}:{1}" -f $_.Path, $_.LineNumber) }
+            throw "immintrin.h still present after patch"
+          }
 
       - name: Create toolchain file for Linux ARM64 (in build dir)
         if: matrix.config.rid == 'linux-arm64'
@@ -120,8 +114,6 @@ jobs:
           set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
           set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
           EOF
-          echo "=== toolchain file ==="
-          sed -n '1,120p' build/toolchain-aarch64.cmake
 
       - name: Build liboqs (Windows)
         if: runner.os == 'Windows'
@@ -156,13 +148,6 @@ jobs:
           }
 
           cmake @cmakeArgs
-
-          if ("${{ matrix.config.arch }}" -eq "arm64") {
-            Write-Host "=== Sanity: immintrin references in liboqs sources ==="
-            Get-ChildItem -Recurse ..\src\common -Filter *.c |
-              Select-String -Pattern "immintrin\.h" |
-              ForEach-Object { "{0}:{1}: {2}" -f $_.Path, $_.LineNumber, $_.Line.Trim() }
-          }
 
           Write-Host "=== CMakeCache (OQS/AES/ARCH) ==="
           Get-Content .\CMakeCache.txt |
@@ -227,20 +212,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-
       - name: Restore NuGet packages
         run: dotnet restore
-
       - name: Download all native artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-
       - name: Copy natives to runtimes
         run: |
           mkdir -p GreenfieldPQC/runtimes/win-x64/native GreenfieldPQC/runtimes/win-arm64/native GreenfieldPQC/runtimes/linux-x64/native GreenfieldPQC/runtimes/linux-arm64/native GreenfieldPQC/runtimes/osx-x64/native GreenfieldPQC/runtimes/osx-arm64/native
@@ -250,15 +231,12 @@ jobs:
           cp artifacts/oqs-linux-arm64/liboqs.so GreenfieldPQC/runtimes/linux-arm64/native/ || true
           cp artifacts/oqs-osx-x64/liboqs.dylib GreenfieldPQC/runtimes/osx-x64/native/ || true
           cp artifacts/oqs-osx-arm64/liboqs.dylib GreenfieldPQC/runtimes/osx-arm64/native/ || true
-
       - name: Build
         working-directory: GreenfieldPQC
         run: dotnet build -c Release
-
       - name: Pack NuGet
         working-directory: GreenfieldPQC
         run: dotnet pack -c Release --no-build --output ../nupkgs
-
       - name: Upload NuGet artifact
         uses: actions/upload-artifact@v4
         with:
