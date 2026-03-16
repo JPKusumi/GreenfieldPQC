@@ -28,7 +28,17 @@ namespace GreenfieldPQC.Cryptography.Interop
             if (libraryName != LibName)
                 return IntPtr.Zero;
 
-            // On Windows the default resolution finds oqs.dll without any special handling.
+            // win-arm64 is not a supported platform (see README). Throw a clear error rather than
+            // letting default .NET resolution produce an opaque DllNotFoundException.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                RuntimeInformation.OSArchitecture == Architecture.Arm64)
+            {
+                throw new PlatformNotSupportedException(
+                    "GreenfieldPQC does not support win-arm64. " +
+                    "Supported platforms are win-x64, linux-x64, linux-arm64, osx-x64, and osx-arm64.");
+            }
+
+            // On Windows (x64) the default resolution finds oqs.dll without any special handling.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return IntPtr.Zero;
 
