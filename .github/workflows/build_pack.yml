@@ -15,7 +15,7 @@ jobs:
       matrix:
         config:
           - { os: windows-latest, arch: x64,   rid: win-x64,   libname: oqs.dll }
-          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }
+          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental
           - { os: ubuntu-22.04,   arch: x64,   rid: linux-x64, libname: liboqs.so }
           - { os: ubuntu-22.04,   arch: arm64, rid: linux-arm64, libname: liboqs.so }
           - { os: macos-latest,   arch: x64,   rid: osx-x64,   libname: liboqs.dylib }
@@ -28,11 +28,20 @@ jobs:
 
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build ninja gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          echo "=== ninja ==="
+          ninja --version || true
+          echo "=== cmake ==="
+          cmake --version
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install cmake ninja
+        run: |
+          brew install cmake ninja
+          ninja --version || true
+          cmake --version
 
       - name: Setup Visual Studio environment (Windows)
         if: runner.os == 'Windows'
@@ -43,11 +52,12 @@ jobs:
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
 
-      - name: "Patch liboqs (Windows ARM64) - disable AES-NI source selection"
+      - name: "Patch liboqs (win-arm64) - disable AES-NI selection block"
         if: matrix.config.rid == 'win-arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
+          Write-Host "=== Patching liboqs to disable AES-NI selection (win-arm64) ==="
           $file = "src/common/CMakeLists.txt"
           if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
 
@@ -55,42 +65,63 @@ jobs:
           $patched = $content -replace 'if\s*\(\s*OQS_DIST_X86_64_BUILD\s+OR\s+OQS_USE_AES_INSTRUCTIONS\s*\)', 'if (FALSE)'
 
           if ($patched -eq $content) {
-            Write-Host "ERROR: Expected AES-NI selection condition not found."
+            Write-Host "ERROR: expected AES-NI selection condition not found."
             Select-String -Path $file -Pattern "OQS_DIST_X86_64_BUILD|OQS_USE_AES_INSTRUCTIONS|aes128_ni\.c|aes256_ni\.c" -Context 1,1
-            throw "Patch did not apply."
+            throw "AES-NI patch did not apply."
           }
 
           Set-Content -Path $file -Value $patched -Encoding UTF8
-          Write-Host "Verified patched condition:"
-          Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,2
+          Write-Host "=== AES-NI patch applied. Verification snippet ==="
+          Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,3
 
-      - name: "Patch liboqs (Windows ARM64) - remove immintrin.h includes"
+      - name: "Patch liboqs (win-arm64) - remove immintrin.h includes"
         if: matrix.config.rid == 'win-arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
+          Write-Host "=== Patching liboqs to remove immintrin.h includes (win-arm64) ==="
           $targets = @(
             "src/common/common.c",
             "src/common/pqclean_shims/fips202x4.c"
           )
 
           foreach ($t in $targets) {
+            Write-Host ("--- Target: {0} ---" -f $t)
             if (-not (Test-Path $t)) { throw "Expected liboqs file not found: $t" }
 
             $c = Get-Content $t -Raw
-            $orig = $c
+            $c2 = $c -replace '(?m)^\s*#\s*include\s*[<"]immintrin\.h[>"]\s*$', '/* immintrin.h disabled for win-arm64 CI experiment */'
 
-            $c = $c -replace '(?m)^\s*#\s*include\s*<immintrin\.h>\s*$', '/* #include <immintrin.h> (disabled for win-arm64 CI experiment) */'
-
-            if ($c -eq $orig) {
-              Write-Host "WARNING: did not find immintrin include as a standalone line in $t"
-              Select-String -Path $t -Pattern "immintrin\.h" -Context 2,2
-            } else {
-              Set-Content -Path $t -Value $c -Encoding UTF8
-              Write-Host ("Patched {0}:" -f $t)
-              Select-String -Path $t -Pattern "immintrin\.h|disabled for win-arm64" -Context 0,1
+            if ($c2 -ne $c) {
+              Set-Content -Path $t -Value $c2 -Encoding UTF8
             }
+
+            if (Select-String -Path $t -Pattern "immintrin\.h" -Quiet) {
+              Write-Host ("ERROR: immintrin.h still present in {0} after patch" -f $t)
+              Select-String -Path $t -Pattern "immintrin\.h" -Context 2,2
+              throw "immintrin.h patch failed"
+            }
+
+            Write-Host ("OK: {0} contains no immintrin.h now" -f $t)
           }
+
+      - name: Create toolchain file for Linux ARM64 (in build dir)
+        if: matrix.config.rid == 'linux-arm64'
+        working-directory: liboqs
+        run: |
+          mkdir -p build
+          cat > build/toolchain-aarch64.cmake <<'EOF'
+          set(CMAKE_SYSTEM_NAME Linux)
+          set(CMAKE_SYSTEM_PROCESSOR aarch64)
+          set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
+          set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+          set(CMAKE_FIND_ROOT_PATH /usr/aarch64-linux-gnu)
+          set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+          set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+          set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+          EOF
+          echo "=== toolchain file ==="
+          sed -n '1,120p' build/toolchain-aarch64.cmake
 
       - name: Build liboqs (Windows)
         if: runner.os == 'Windows'
@@ -130,13 +161,28 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: liboqs
         run: |
-          mkdir build
+          mkdir -p build
           cd build
+
           if [ "${{ matrix.config.rid }}" = "linux-arm64" ]; then
-            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake
+            cmake .. -G Ninja \
+              -DBUILD_SHARED_LIBS=YES \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DOQS_BUILD_ONLY_LIB=ON \
+              -DOQS_USE_OPENSSL=OFF \
+              -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" \
+              -DOQS_OPT_TARGET=generic \
+              -DCMAKE_TOOLCHAIN_FILE=toolchain-aarch64.cmake
           else
-            cmake .. -G Ninja -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=ON -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic
+            cmake .. -G Ninja \
+              -DBUILD_SHARED_LIBS=YES \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DOQS_BUILD_ONLY_LIB=ON \
+              -DOQS_USE_OPENSSL=OFF \
+              -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" \
+              -DOQS_OPT_TARGET=generic
           fi
+
           ninja
 
       - name: Copy lib to standard location (Windows)
@@ -164,6 +210,7 @@ jobs:
   pack-nuget:
     needs: build-natives
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
