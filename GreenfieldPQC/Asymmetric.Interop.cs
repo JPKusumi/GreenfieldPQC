@@ -47,7 +47,9 @@ namespace GreenfieldPQC.Cryptography.Interop
                 : "liboqs.so";
 
             string rid = GetRuntimeIdentifier();
-            string? assemblyDir = Path.GetDirectoryName(assembly.Location);
+            string? assemblyDir = string.IsNullOrEmpty(assembly.Location)
+                ? null
+                : Path.GetDirectoryName(assembly.Location);
 
             // Probe in priority order so the bundled NuGet library wins over system libraries.
             string?[] candidates =

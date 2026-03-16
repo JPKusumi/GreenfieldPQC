@@ -6,6 +6,7 @@ on:
     tags: [ 'v*' ]  # Triggers on tags like v1.0.1, but publish is manual
   pull_request:
     branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from the GitHub Actions UI
 
 jobs:
   build-natives:
