@@ -31,14 +31,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          echo "=== ninja ==="
           ninja --version
+          echo "=== cmake ==="
           cmake --version
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
+          echo "=== ninja ==="
           ninja --version
+          echo "=== cmake ==="
           cmake --version
 
       - name: Setup Visual Studio environment (Windows)
@@ -70,12 +74,12 @@ jobs:
           Set-Content -Path $file -Value $patched -Encoding UTF8
           Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,3
 
-      - name: "Patch liboqs (win-arm64) - remove all immintrin.h includes under src/common"
+      - name: "Patch liboqs (win-arm64) - remove ALL x86 intrinsics includes under src/common"
         if: runner.os == 'Windows' && matrix.config.arch == 'arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
-          Write-Host "=== Removing all immintrin.h includes under src/common (win-arm64) ==="
+          Write-Host "=== Removing ALL x86 intrinsics includes under src/common (win-arm64) ==="
 
           $files = Get-ChildItem -Recurse src/common -Include *.c,*.h
           $changed = 0
@@ -83,7 +87,12 @@ jobs:
           foreach ($f in $files) {
             $p = $f.FullName
             $c = Get-Content $p -Raw
-            $c2 = $c -replace '(?m)^\s*#\s*include\s*[<"]immintrin\.h[>"]\s*$', '/* immintrin.h disabled for win-arm64 CI experiment */'
+
+            # Replace ANY line that mentions these headers (handles <>, "", spacing, comments, etc.)
+            $c2 = $c
+            $c2 = $c2 -replace '(?m)^.*\bimmintrin\.h\b.*$', '/* x86 intrinsics include removed for win-arm64 CI experiment */'
+            $c2 = $c2 -replace '(?m)^.*\bwmmintrin\.h\b.*$', '/* x86 intrinsics include removed for win-arm64 CI experiment */'
+
             if ($c2 -ne $c) {
               Set-Content -Path $p -Value $c2 -Encoding UTF8
               $changed++
@@ -92,11 +101,11 @@ jobs:
 
           Write-Host ("Patched {0} files" -f $changed)
 
-          Write-Host "=== Remaining immintrin.h references (should be none) ==="
-          $hits = $files | Select-String -Pattern "immintrin\.h" -List
+          Write-Host "=== Remaining intrinsics references (should be none) ==="
+          $hits = $files | Select-String -Pattern "immintrin\.h|wmmintrin\.h" -List
           if ($hits) {
             $hits | ForEach-Object { Write-Host ("HIT: {0}:{1}" -f $_.Path, $_.LineNumber) }
-            throw "immintrin.h still present after patch"
+            throw "intrinsics headers still present after patch"
           }
 
       - name: Create toolchain file for Linux ARM64 (in build dir)
