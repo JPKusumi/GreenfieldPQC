@@ -15,6 +15,7 @@ jobs:
       matrix:
         config:
           - { os: windows-latest, arch: x64, rid: win-x64, libname: oqs.dll }
+          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental: cross-compile for Windows ARM64
           - { os: ubuntu-22.04, arch: x64, rid: linux-x64, libname: liboqs.so }
           - { os: ubuntu-22.04, arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM on 22.04
           - { os: macos-latest, arch: x64, rid: osx-x64, libname: liboqs.dylib }
@@ -37,10 +38,37 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: x64
+          arch: ${{ matrix.config.arch == 'arm64' && 'amd64_arm64' || 'x64' }}
 
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
+
+      - name: Diagnostics (Windows ARM64)
+        if: matrix.config.rid == 'win-arm64'
+        shell: pwsh
+        run: |
+          Write-Host "=== CMake version ==="
+          cmake --version
+          Write-Host "=== Visual Studio installations ==="
+          $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vsWhere) {
+            & $vsWhere -latest -format json
+          } else {
+            Write-Host "vswhere.exe not found at expected path"
+          }
+          Write-Host "=== CL compiler location ==="
+          where.exe cl 2>&1 || Write-Host "cl.exe not found in PATH"
+          Write-Host "=== CL version ==="
+          try { cl /? 2>&1 | Select-Object -First 3 } catch { Write-Host "cl.exe error: $_" }
+          Write-Host "=== LINK location ==="
+          where.exe link 2>&1 || Write-Host "link.exe not found in PATH"
+          Write-Host "=== VCINSTALLDIR ==="
+          Write-Host $env:VCINSTALLDIR
+          Write-Host "=== VCToolsInstallDir ==="
+          Write-Host $env:VCToolsInstallDir
+          Write-Host "=== VS140COMNTOOLS / VS170COMNTOOLS ==="
+          Write-Host "VS140COMNTOOLS: $env:VS140COMNTOOLS"
+          Write-Host "VS170COMNTOOLS: $env:VS170COMNTOOLS"
 
       - name: Create toolchain file for Linux ARM64
         if: matrix.config.rid == 'linux-arm64'
@@ -60,9 +88,11 @@ jobs:
         working-directory: liboqs
         shell: pwsh
         run: |
+          $cmakeArch = if ("${{ matrix.config.arch }}" -eq "arm64") { "ARM64" } else { "x64" }
+          Write-Host "=== Building liboqs for Windows $cmakeArch ==="
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
+          cmake .. -G "Visual Studio 17 2022" -A $cmakeArch -DBUILD_SHARED_LIBS=YES -DCMAKE_BUILD_TYPE=Release -DOQS_BUILD_ONLY_LIB=YES -DOQS_USE_OPENSSL=OFF -DOQS_MINIMAL_BUILD="KEM_ML_KEM_512;KEM_ML_KEM_768;KEM_ML_KEM_1024;SIG_ML_DSA_44;SIG_ML_DSA_65;SIG_ML_DSA_87" -DOQS_OPT_TARGET=generic -DOQS_USE_CPU_EXTENSIONS=OFF -DOQS_DIST_BUILD=ON -DOQS_USE_AES_INSTRUCTIONS=OFF
           cmake --build . --config Release -- /m
           Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName
 
@@ -182,8 +212,9 @@ jobs:
 
       - name: Copy natives to runtimes
         run: |
-          mkdir -p GreenfieldPQC/runtimes/win-x64/native GreenfieldPQC/runtimes/linux-x64/native GreenfieldPQC/runtimes/linux-arm64/native GreenfieldPQC/runtimes/osx-x64/native GreenfieldPQC/runtimes/osx-arm64/native
+          mkdir -p GreenfieldPQC/runtimes/win-x64/native GreenfieldPQC/runtimes/win-arm64/native GreenfieldPQC/runtimes/linux-x64/native GreenfieldPQC/runtimes/linux-arm64/native GreenfieldPQC/runtimes/osx-x64/native GreenfieldPQC/runtimes/osx-arm64/native
           cp artifacts/oqs-win-x64/oqs.dll GreenfieldPQC/runtimes/win-x64/native/ || true
+          cp artifacts/oqs-win-arm64/oqs.dll GreenfieldPQC/runtimes/win-arm64/native/ || true
           cp artifacts/oqs-linux-x64/liboqs.so GreenfieldPQC/runtimes/linux-x64/native/ || true
           cp artifacts/oqs-linux-arm64/liboqs.so GreenfieldPQC/runtimes/linux-arm64/native/ || true
           cp artifacts/oqs-osx-x64/liboqs.dylib GreenfieldPQC/runtimes/osx-x64/native/ || true

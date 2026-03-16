@@ -24,6 +24,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>oqs.dll</TargetPath>
     </None>
+    <None Update="runtimes\win-arm64\native\oqs.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>oqs.dll</TargetPath>
+    </None>
     <None Update="runtimes\linux-x64\native\liboqs.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
