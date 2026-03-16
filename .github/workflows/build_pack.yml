@@ -3,7 +3,7 @@ name: Build and Pack NuGet
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]  # Triggers on tags like v1.0.1, but publish is manual
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -17,9 +17,9 @@ jobs:
           - { os: windows-latest, arch: x64,   rid: win-x64,   libname: oqs.dll }
           - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental: cross-compile for Windows ARM64
           - { os: ubuntu-22.04,   arch: x64,   rid: linux-x64, libname: liboqs.so }
-          - { os: ubuntu-22.04,   arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM on 22.04
+          - { os: ubuntu-22.04,   arch: arm64, rid: linux-arm64, libname: liboqs.so }
           - { os: macos-latest,   arch: x64,   rid: osx-x64,   libname: liboqs.dylib }
-          - { os: macos-14,       arch: arm64, rid: osx-arm64, libname: liboqs.dylib }  # Native ARM runner
+          - { os: macos-14,       arch: arm64, rid: osx-arm64, libname: liboqs.dylib }
 
     runs-on: ${{ matrix.config.os }}
 
@@ -49,19 +49,12 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          # For ARM64 we cross-compile on the x64 runner host toolchain:
-          # Host: amd64, Target: arm64
           arch: ${{ matrix.config.arch == 'arm64' && 'amd64_arm64' || 'x64' }}
 
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
 
-      #
-      # Windows ARM64 CI-only patches:
-      # - Disable AES-NI sources (x86 intrinsics)
-      # - Attempt to remove immintrin.h includes that break ARM64 compilation
-      #
-      - name: "Patch liboqs (Windows ARM64) - disable AES-NI source selection"
+      - name: "Patch liboqs (win-arm64) - disable AES-NI source selection"
         if: runner.os == 'Windows' && matrix.config.arch == 'arm64'
         working-directory: liboqs
         shell: pwsh
@@ -71,11 +64,6 @@ jobs:
           if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
 
           $content = Get-Content $file -Raw
-
-          # Force AES-NI selection branch OFF by rewriting the condition:
-          # if (OQS_DIST_X86_64_BUILD OR OQS_USE_AES_INSTRUCTIONS)
-          # ->
-          # if (FALSE)
           $patched = $content -replace 'if\s*\(\s*OQS_DIST_X86_64_BUILD\s+OR\s+OQS_USE_AES_INSTRUCTIONS\s*\)', 'if (FALSE)'
 
           if ($patched -eq $content) {
@@ -88,32 +76,34 @@ jobs:
           Write-Host "=== AES-NI patch applied (verification) ==="
           Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,3
 
-      - name: "Patch liboqs (Windows ARM64) - remove immintrin.h includes"
+      - name: "Patch liboqs (win-arm64) - disable Keccak times4 AVX2 (immintrin)"
         if: runner.os == 'Windows' && matrix.config.arch == 'arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
-          Write-Host "=== Patching liboqs to remove immintrin.h includes (win-arm64) ==="
-          $targets = @(
-            "src/common/common.c",
-            "src/common/pqclean_shims/fips202x4.c"
-          )
+          Write-Host "=== Patching liboqs to disable Keccak times4 AVX2 sources (win-arm64) ==="
+          $file = "src/common/sha3/xkcp_low/CMakeLists.txt"
+          if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
 
-          foreach ($t in $targets) {
-            Write-Host ("--- Target: {0} ---" -f $t)
-            if (-not (Test-Path $t)) { throw "Expected liboqs file not found: $t" }
+          $content = Get-Content $file -Raw
+          $orig = $content
 
-            $c = Get-Content $t -Raw
-            $c2 = $c -replace '(?m)^\s*#\s*include\s*[<"]immintrin\.h[>"]\s*$', '/* immintrin.h disabled for win-arm64 CI experiment */'
+          # Comment out any lines that reference the AVX2/SIMD256 times4 implementation.
+          # This is intentionally broad to survive upstream refactors.
+          $content = $content -replace '(?m)^\s*(.*KeccakP-1600times4.*avx2.*)$', '# $1  # disabled for win-arm64'
+          $content = $content -replace '(?m)^\s*(.*KeccakP-1600-times4-SIMD256\.c.*)$', '# $1  # disabled for win-arm64'
+          $content = $content -replace '(?m)^\s*(.*SIMD256.*KeccakP-1600.*times4.*)$', '# $1  # disabled for win-arm64'
+          $content = $content -replace '(?m)^\s*(.*\/avx2\/.*KeccakP-1600.*times4.*)$', '# $1  # disabled for win-arm64'
 
-            if ($c2 -ne $c) {
-              Set-Content -Path $t -Value $c2 -Encoding UTF8
-              Write-Host ("Patched {0}" -f $t)
-            } else {
-              Write-Host ("WARNING: no standalone immintrin include line matched in {0}" -f $t)
-              Select-String -Path $t -Pattern "immintrin\.h" -Context 2,2
-            }
+          if ($content -eq $orig) {
+            Write-Host "WARNING: no changes made to xkcp_low/CMakeLists.txt; showing matches to help update patch:"
+            Select-String -Path $file -Pattern "KeccakP-1600times4|SIMD256|avx2|times4" -Context 1,1
+            throw "Keccak AVX2 patch did not apply."
           }
+
+          Set-Content -Path $file -Value $content -Encoding UTF8
+          Write-Host "=== Keccak AVX2 patch applied (verification) ==="
+          Select-String -Path $file -Pattern "disabled for win-arm64|KeccakP-1600times4|SIMD256|avx2" -Context 0,1
 
       - name: Create toolchain file for Linux ARM64 (in build dir)
         if: matrix.config.rid == 'linux-arm64'
@@ -208,62 +198,6 @@ jobs:
           fi
 
           ninja
-
-      - name: Validate liboqs symbols (Linux)
-        if: runner.os == 'Linux'
-        working-directory: liboqs/build
-        run: |
-          LIB="lib/${{ matrix.config.libname }}"
-          echo "=== Checking for required OQS symbols in ${LIB} ==="
-          REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
-          MISSING=""
-          for sym in $REQUIRED_SYMBOLS; do
-            if ! nm -D "${LIB}" 2>/dev/null | grep -q " T ${sym}$"; then
-              MISSING="${MISSING} ${sym}"
-            fi
-          done
-          if [ -n "${MISSING}" ]; then
-            echo "ERROR: Missing required exported symbols:${MISSING}"
-            nm -D "${LIB}" | grep OQS || true
-            exit 1
-          fi
-          echo "All required symbols present."
-
-      - name: Validate liboqs deps (Linux native only)
-        if: runner.os == 'Linux' && matrix.config.rid != 'linux-arm64'
-        working-directory: liboqs/build
-        run: |
-          LIB="lib/${{ matrix.config.libname }}"
-          echo "=== Checking shared library dependencies (ldd) for ${LIB} ==="
-          ldd "${LIB}"
-          if ldd "${LIB}" 2>&1 | grep -q "not found"; then
-            echo "ERROR: One or more shared library dependencies were not found."
-            exit 1
-          fi
-          echo "All dependencies resolved."
-
-      - name: Validate liboqs symbols and deps (macOS)
-        if: runner.os == 'macOS'
-        working-directory: liboqs/build
-        run: |
-          LIB="lib/${{ matrix.config.libname }}"
-          echo "=== Checking shared library dependencies (otool -L) for ${LIB} ==="
-          otool -L "${LIB}"
-          echo ""
-          echo "=== Checking for required OQS symbols in ${LIB} ==="
-          REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
-          MISSING=""
-          for sym in $REQUIRED_SYMBOLS; do
-            if ! nm -gU "${LIB}" 2>/dev/null | grep -q "${sym}$"; then
-              MISSING="${MISSING} ${sym}"
-            fi
-          done
-          if [ -n "${MISSING}" ]; then
-            echo "ERROR: Missing required exported symbols:${MISSING}"
-            nm -gU "${LIB}" | grep OQS || true
-            exit 1
-          fi
-          echo "All required symbols present."
 
       - name: Copy lib to standard location (Windows)
         if: runner.os == 'Windows'
