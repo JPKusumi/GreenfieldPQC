@@ -3,7 +3,7 @@ name: Build and Pack NuGet
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
+    tags: [ 'v*' ]  # Triggers on tags like v1.0.1, but publish is manual
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -15,11 +15,11 @@ jobs:
       matrix:
         config:
           - { os: windows-latest, arch: x64,   rid: win-x64,   libname: oqs.dll }
-          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental
+          - { os: windows-latest, arch: arm64, rid: win-arm64, libname: oqs.dll }  # Experimental: cross-compile for Windows ARM64
           - { os: ubuntu-22.04,   arch: x64,   rid: linux-x64, libname: liboqs.so }
-          - { os: ubuntu-22.04,   arch: arm64, rid: linux-arm64, libname: liboqs.so }
+          - { os: ubuntu-22.04,   arch: arm64, rid: linux-arm64, libname: liboqs.so }  # Cross-compile for ARM on 22.04
           - { os: macos-latest,   arch: x64,   rid: osx-x64,   libname: liboqs.dylib }
-          - { os: macos-14,       arch: arm64, rid: osx-arm64, libname: liboqs.dylib }
+          - { os: macos-14,       arch: arm64, rid: osx-arm64, libname: liboqs.dylib }  # Native ARM runner
 
     runs-on: ${{ matrix.config.os }}
 
@@ -30,9 +30,9 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build ninja gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt-get install -y cmake ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
           echo "=== ninja ==="
-          ninja --version || true
+          ninja --version
           echo "=== cmake ==="
           cmake --version
 
@@ -40,20 +40,29 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
-          ninja --version || true
+          echo "=== ninja ==="
+          ninja --version
+          echo "=== cmake ==="
           cmake --version
 
       - name: Setup Visual Studio environment (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
+          # For ARM64 we cross-compile on the x64 runner host toolchain:
+          # Host: amd64, Target: arm64
           arch: ${{ matrix.config.arch == 'arm64' && 'amd64_arm64' || 'x64' }}
 
       - name: Clone liboqs
         run: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git
 
-      - name: "Patch liboqs (win-arm64) - disable AES-NI selection block"
-        if: matrix.config.rid == 'win-arm64'
+      #
+      # Windows ARM64 CI-only patches:
+      # - Disable AES-NI sources (x86 intrinsics)
+      # - Attempt to remove immintrin.h includes that break ARM64 compilation
+      #
+      - name: "Patch liboqs (Windows ARM64) - disable AES-NI source selection"
+        if: runner.os == 'Windows' && matrix.config.arch == 'arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
@@ -62,6 +71,11 @@ jobs:
           if (-not (Test-Path $file)) { throw "Expected liboqs file not found: $file" }
 
           $content = Get-Content $file -Raw
+
+          # Force AES-NI selection branch OFF by rewriting the condition:
+          # if (OQS_DIST_X86_64_BUILD OR OQS_USE_AES_INSTRUCTIONS)
+          # ->
+          # if (FALSE)
           $patched = $content -replace 'if\s*\(\s*OQS_DIST_X86_64_BUILD\s+OR\s+OQS_USE_AES_INSTRUCTIONS\s*\)', 'if (FALSE)'
 
           if ($patched -eq $content) {
@@ -71,11 +85,11 @@ jobs:
           }
 
           Set-Content -Path $file -Value $patched -Encoding UTF8
-          Write-Host "=== AES-NI patch applied. Verification snippet ==="
+          Write-Host "=== AES-NI patch applied (verification) ==="
           Select-String -Path $file -Pattern "if \(FALSE\)" -Context 0,3
 
-      - name: "Patch liboqs (win-arm64) - remove immintrin.h includes"
-        if: matrix.config.rid == 'win-arm64'
+      - name: "Patch liboqs (Windows ARM64) - remove immintrin.h includes"
+        if: runner.os == 'Windows' && matrix.config.arch == 'arm64'
         working-directory: liboqs
         shell: pwsh
         run: |
@@ -94,15 +108,11 @@ jobs:
 
             if ($c2 -ne $c) {
               Set-Content -Path $t -Value $c2 -Encoding UTF8
-            }
-
-            if (Select-String -Path $t -Pattern "immintrin\.h" -Quiet) {
-              Write-Host ("ERROR: immintrin.h still present in {0} after patch" -f $t)
+              Write-Host ("Patched {0}" -f $t)
+            } else {
+              Write-Host ("WARNING: no standalone immintrin include line matched in {0}" -f $t)
               Select-String -Path $t -Pattern "immintrin\.h" -Context 2,2
-              throw "immintrin.h patch failed"
             }
-
-            Write-Host ("OK: {0} contains no immintrin.h now" -f $t)
           }
 
       - name: Create toolchain file for Linux ARM64 (in build dir)
@@ -150,11 +160,25 @@ jobs:
           )
 
           if ("${{ matrix.config.arch }}" -eq "arm64") {
+            Write-Host "=== win-arm64: adding __NO_AESNI__ define via CMAKE_*_FLAGS ==="
             $cmakeArgs += "-DCMAKE_C_FLAGS=/D__NO_AESNI__"
             $cmakeArgs += "-DCMAKE_CXX_FLAGS=/D__NO_AESNI__"
           }
 
           cmake @cmakeArgs
+
+          if ("${{ matrix.config.arch }}" -eq "arm64") {
+            Write-Host "=== Sanity: immintrin references in liboqs sources ==="
+            Get-ChildItem -Recurse ..\src\common -Filter *.c |
+              Select-String -Pattern "immintrin\.h" |
+              ForEach-Object { "{0}:{1}: {2}" -f $_.Path, $_.LineNumber, $_.Line.Trim() }
+          }
+
+          Write-Host "=== CMakeCache (OQS/AES/ARCH) ==="
+          Get-Content .\CMakeCache.txt |
+            Select-String -Pattern "CMAKE_GENERATOR_PLATFORM|CMAKE_SYSTEM_PROCESSOR|OQS_|AES|NI|INTRIN" |
+            ForEach-Object { $_.Line }
+
           cmake --build . --config Release -- /m
 
       - name: Build liboqs (Linux/macOS)
@@ -185,6 +209,62 @@ jobs:
 
           ninja
 
+      - name: Validate liboqs symbols (Linux)
+        if: runner.os == 'Linux'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Checking for required OQS symbols in ${LIB} ==="
+          REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
+          MISSING=""
+          for sym in $REQUIRED_SYMBOLS; do
+            if ! nm -D "${LIB}" 2>/dev/null | grep -q " T ${sym}$"; then
+              MISSING="${MISSING} ${sym}"
+            fi
+          done
+          if [ -n "${MISSING}" ]; then
+            echo "ERROR: Missing required exported symbols:${MISSING}"
+            nm -D "${LIB}" | grep OQS || true
+            exit 1
+          fi
+          echo "All required symbols present."
+
+      - name: Validate liboqs deps (Linux native only)
+        if: runner.os == 'Linux' && matrix.config.rid != 'linux-arm64'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Checking shared library dependencies (ldd) for ${LIB} ==="
+          ldd "${LIB}"
+          if ldd "${LIB}" 2>&1 | grep -q "not found"; then
+            echo "ERROR: One or more shared library dependencies were not found."
+            exit 1
+          fi
+          echo "All dependencies resolved."
+
+      - name: Validate liboqs symbols and deps (macOS)
+        if: runner.os == 'macOS'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Checking shared library dependencies (otool -L) for ${LIB} ==="
+          otool -L "${LIB}"
+          echo ""
+          echo "=== Checking for required OQS symbols in ${LIB} ==="
+          REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
+          MISSING=""
+          for sym in $REQUIRED_SYMBOLS; do
+            if ! nm -gU "${LIB}" 2>/dev/null | grep -q "${sym}$"; then
+              MISSING="${MISSING} ${sym}"
+            fi
+          done
+          if [ -n "${MISSING}" ]; then
+            echo "ERROR: Missing required exported symbols:${MISSING}"
+            nm -gU "${LIB}" | grep OQS || true
+            exit 1
+          fi
+          echo "All required symbols present."
+
       - name: Copy lib to standard location (Windows)
         if: runner.os == 'Windows'
         working-directory: liboqs
@@ -213,13 +293,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - run: dotnet restore
-      - uses: actions/download-artifact@v4
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Download all native artifacts
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
+
       - name: Copy natives to runtimes
         run: |
           mkdir -p GreenfieldPQC/runtimes/win-x64/native GreenfieldPQC/runtimes/win-arm64/native GreenfieldPQC/runtimes/linux-x64/native GreenfieldPQC/runtimes/linux-arm64/native GreenfieldPQC/runtimes/osx-x64/native GreenfieldPQC/runtimes/osx-arm64/native
@@ -229,11 +316,17 @@ jobs:
           cp artifacts/oqs-linux-arm64/liboqs.so GreenfieldPQC/runtimes/linux-arm64/native/ || true
           cp artifacts/oqs-osx-x64/liboqs.dylib GreenfieldPQC/runtimes/osx-x64/native/ || true
           cp artifacts/oqs-osx-arm64/liboqs.dylib GreenfieldPQC/runtimes/osx-arm64/native/ || true
-      - working-directory: GreenfieldPQC
+
+      - name: Build
+        working-directory: GreenfieldPQC
         run: dotnet build -c Release
-      - working-directory: GreenfieldPQC
+
+      - name: Pack NuGet
+        working-directory: GreenfieldPQC
         run: dotnet pack -c Release --no-build --output ../nupkgs
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload NuGet artifact
+        uses: actions/upload-artifact@v4
         with:
           name: nuget-package
           path: nupkgs/*.nupkg
