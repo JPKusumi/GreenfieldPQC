@@ -24,7 +24,7 @@ namespace GreenfieldPQC.Tests
                 File.AppendAllText(logPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
             }
         }
-        [Fact]
+        [NativeRequiredFact]
         public void JwsProvider_CreateJws_VerifyJws_RoundTrip()
         {
             // Arrange
@@ -52,7 +52,7 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_CreateJws_VerifyJws_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JwsProvider_VerifyJws_InvalidSignature_ThrowsException()
         {
             // Arrange
@@ -72,7 +72,7 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_VerifyJws_InvalidSignature_ThrowsException passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JwsProvider_CreateJws_EmptyPayload_RoundTrip()
         {
             // Arrange
@@ -91,7 +91,7 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_CreateJws_EmptyPayload_RoundTrip passed");
         }
 
-        [Theory]
+        [NativeRequiredTheory]
         [InlineData(2)]  // Level 2 (ML-DSA-44)
         [InlineData(3)]  // Level 3 (ML-DSA-65)
         [InlineData(5)]  // Level 5 (ML-DSA-87)
@@ -115,7 +115,7 @@ namespace GreenfieldPQC.Tests
             Log($"JwsProvider_CreateJws_VariousLevels_RoundTrip (Level {dilithiumLevel}) passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_CreateJwe_DecryptJwe_RoundTrip()
         {
             // Arrange
@@ -145,7 +145,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_DecryptJwe_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_DecryptJwe_InvalidToken_ThrowsException()
         {
             // Arrange
@@ -169,7 +169,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_DecryptJwe_InvalidToken_ThrowsException passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_CreateJwe_EmptyPayload_RoundTrip()
         {
             // Arrange
@@ -193,7 +193,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_EmptyPayload_RoundTrip passed");
         }
 
-        [Theory]
+        [NativeRequiredTheory]
         [InlineData(1, CryptoFactory.CipherAlgorithm.Kusumi512)]  // Level 1, plain
         [InlineData(3, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305)]  // Level 3, Poly1305
         [InlineData(5, CryptoFactory.CipherAlgorithm.Kusumi512)]  // Level 5, plain
@@ -220,7 +220,7 @@ namespace GreenfieldPQC.Tests
             Log($"JweProvider_CreateJwe_VariousLevelsAndVariants_RoundTrip (Level {kyberLevel}, Algorithm {kusumiAlgorithm}) passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JwsJweNesting_CreateNested_VerifyRoundTrip()
         {
             // Arrange
@@ -659,7 +659,7 @@ namespace GreenfieldPQC.Tests
             }
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void GenerateKeyPair_EncapsulateDecapsulate_RoundTrip()
         {
             var kyber = CryptoFactory.CreateKyber(512);
@@ -696,7 +696,7 @@ namespace GreenfieldPQC.Tests
             }
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void GenerateKeyPair_SignVerify_ValidSignature()
         {
             var dilithium = CryptoFactory.CreateDilithium(2);
@@ -713,7 +713,7 @@ namespace GreenfieldPQC.Tests
             Log("Dilithium_GenerateKeyPair_SignVerify_ValidSignature passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void Verify_InvalidSignature_ReturnsFalse()
         {
             var dilithium = CryptoFactory.CreateDilithium(2);
@@ -833,7 +833,7 @@ namespace GreenfieldPQC.Tests
             Log($"CreateDilithium_WithEnum_{level}_Returns{expectedAlgorithmName} passed");
         }
 
-        [Theory]
+        [NativeRequiredTheory]
         [InlineData(DilithiumSecurityLevel.ML_DSA_44)]
         [InlineData(DilithiumSecurityLevel.ML_DSA_65)]
         [InlineData(DilithiumSecurityLevel.ML_DSA_87)]
@@ -857,7 +857,7 @@ namespace GreenfieldPQC.Tests
             Log($"CreateJwsProvider_WithEnum_{level}_CreatesValidProvider passed");
         }
 
-        [Theory]
+        [NativeRequiredTheory]
         [InlineData(KyberSecurityLevel.ML_KEM_512, CipherAlgorithm.Kusumi512)]
         [InlineData(KyberSecurityLevel.ML_KEM_768, CipherAlgorithm.Kusumi512Poly1305)]
         [InlineData(KyberSecurityLevel.ML_KEM_1024, CipherAlgorithm.Kusumi512)]
@@ -882,7 +882,7 @@ namespace GreenfieldPQC.Tests
             Log($"CreateJweProvider_WithEnum_{level}_{cipher}_CreatesValidProvider passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JwsJweNesting_WithEnums_RoundTrip()
         {
             // Arrange - Use enum API exclusively
@@ -920,7 +920,7 @@ namespace GreenfieldPQC.Tests
             Log("JwsJweNesting_WithEnums_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void EnumAndIntAPI_ProduceSameResults()
         {
             // Arrange
@@ -1047,7 +1047,7 @@ namespace GreenfieldPQC.Tests
             Log($"CreateJweProvider_InvalidLevel_{level}_ThrowsException passed");
         }
 
-        [Theory]
+        [NativeRequiredTheory]
         [InlineData(CipherAlgorithm.Kusumi512)]
         [InlineData(CipherAlgorithm.Kusumi512Poly1305)]
         public void CreateJweProvider_DifferentCipherAlgorithms_WorkCorrectly(CipherAlgorithm algorithm)
@@ -1069,7 +1069,7 @@ namespace GreenfieldPQC.Tests
 
         // ========== ERROR HANDLING TESTS ==========
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_DecryptJwe_InvalidFormat_ThrowsException()
         {
             // Arrange
@@ -1083,7 +1083,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_DecryptJwe_InvalidFormat_ThrowsException passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JwsProvider_VerifyJws_InvalidFormat_ThrowsException()
         {
             // Arrange
@@ -1102,7 +1102,7 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_VerifyJws_InvalidFormat_ThrowsException passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_CreateJwe_LargePayload_RoundTrip()
         {
             // Arrange
@@ -1124,7 +1124,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_LargePayload_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JwsProvider_CreateJws_UnicodePayload_RoundTrip()
         {
             // Arrange
@@ -1142,7 +1142,7 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_CreateJws_UnicodePayload_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_CreateJwe_ComplexNestedPayload_RoundTrip()
         {
             // Arrange
@@ -1171,7 +1171,7 @@ namespace GreenfieldPQC.Tests
 
         // ========== v1.1.4: BYTE[] OVERLOAD TESTS ==========
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_DecryptJweBytes_RoundTrip()
         {
             // Arrange
@@ -1205,7 +1205,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_DecryptJweBytes_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_CreateJwe_ByteSpanPayload_RoundTrip()
         {
             // Arrange
@@ -1232,7 +1232,7 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_ByteSpanPayload_RoundTrip passed");
         }
 
-        [Fact]
+        [NativeRequiredFact]
         public void JweProvider_CreateJwe_ByteSpanPayload_VariousLevels_RoundTrip()
         {
             // Verify the byte[] overload works across all Kyber levels and cipher variants
