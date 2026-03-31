@@ -79,6 +79,19 @@ jobs:
           fi
           ninja
 
+      - name: Validate linux-arm64 binary architecture
+        if: matrix.config.rid == 'linux-arm64'
+        working-directory: liboqs/build
+        run: |
+          LIB="lib/${{ matrix.config.libname }}"
+          echo "=== Verifying ${LIB} is AArch64 (ARM64) ==="
+          file "${LIB}"
+          if ! file "${LIB}" | grep -qiE "aarch64|ARM aarch64"; then
+            echo "ERROR: ${LIB} is not an AArch64/ARM64 binary — cross-compile may have produced the wrong architecture."
+            exit 1
+          fi
+          echo "Confirmed: binary is AArch64/ARM64."
+
       - name: Validate liboqs symbols (Linux)
         if: runner.os == 'Linux'
         working-directory: liboqs/build
@@ -125,8 +138,8 @@ jobs:
           REQUIRED_SYMBOLS="OQS_KEM_new OQS_SIG_new OQS_SIG_sign OQS_SIG_verify"
           MISSING=""
           for sym in $REQUIRED_SYMBOLS; do
-            # macOS nm -gU output uses '_SYMBOL' prefix for C symbols; match at end of line
-            if ! nm -gU "${LIB}" 2>/dev/null | grep -q "${sym}$"; then
+            # macOS nm -gU output uses '_SYMBOL' prefix for C symbols; accept with or without leading underscore
+            if ! nm -gU "${LIB}" 2>/dev/null | grep -qE "_?${sym}$"; then
               MISSING="${MISSING} ${sym}"
             fi
           done
@@ -183,19 +196,45 @@ jobs:
       - name: Copy natives to runtimes
         run: |
           mkdir -p GreenfieldPQC/runtimes/win-x64/native GreenfieldPQC/runtimes/linux-x64/native GreenfieldPQC/runtimes/linux-arm64/native GreenfieldPQC/runtimes/osx-x64/native GreenfieldPQC/runtimes/osx-arm64/native
-          cp artifacts/oqs-win-x64/oqs.dll GreenfieldPQC/runtimes/win-x64/native/ || true
-          cp artifacts/oqs-linux-x64/liboqs.so GreenfieldPQC/runtimes/linux-x64/native/ || true
-          cp artifacts/oqs-linux-arm64/liboqs.so GreenfieldPQC/runtimes/linux-arm64/native/ || true
-          cp artifacts/oqs-osx-x64/liboqs.dylib GreenfieldPQC/runtimes/osx-x64/native/ || true
-          cp artifacts/oqs-osx-arm64/liboqs.dylib GreenfieldPQC/runtimes/osx-arm64/native/ || true
+          cp artifacts/oqs-win-x64/oqs.dll GreenfieldPQC/runtimes/win-x64/native/
+          cp artifacts/oqs-linux-x64/liboqs.so GreenfieldPQC/runtimes/linux-x64/native/
+          cp artifacts/oqs-linux-arm64/liboqs.so GreenfieldPQC/runtimes/linux-arm64/native/
+          cp artifacts/oqs-osx-x64/liboqs.dylib GreenfieldPQC/runtimes/osx-x64/native/
+          cp artifacts/oqs-osx-arm64/liboqs.dylib GreenfieldPQC/runtimes/osx-arm64/native/
 
       - name: Build
         working-directory: GreenfieldPQC
         run: dotnet build -c Release
 
+      - name: Run tests
+        run: dotnet test -c Release
+
       - name: Pack NuGet
         working-directory: GreenfieldPQC
         run: dotnet pack -c Release --no-build --output ../nupkgs
+
+      - name: Validate nupkg contents
+        run: |
+          NUPKG=$(ls nupkgs/*.nupkg 2>/dev/null | head -1)
+          if [ -z "${NUPKG}" ]; then
+            echo "ERROR: No .nupkg file found in nupkgs/"
+            exit 1
+          fi
+          echo "=== Verifying contents of ${NUPKG} ==="
+          NUPKG_CONTENTS=$(unzip -l "${NUPKG}")
+          echo "${NUPKG_CONTENTS}"
+          EXPECTED_ENTRIES="runtimes/win-x64/native/oqs.dll runtimes/linux-x64/native/liboqs.so runtimes/linux-arm64/native/liboqs.so runtimes/osx-x64/native/liboqs.dylib runtimes/osx-arm64/native/liboqs.dylib"
+          MISSING=""
+          for entry in $EXPECTED_ENTRIES; do
+            if ! echo "${NUPKG_CONTENTS}" | grep -qF "${entry}"; then
+              MISSING="${MISSING} ${entry}"
+            fi
+          done
+          if [ -n "${MISSING}" ]; then
+            echo "ERROR: .nupkg is missing the following native entries:${MISSING}"
+            exit 1
+          fi
+          echo "All expected native entries present in .nupkg."
 
       - name: Upload NuGet artifact
         uses: actions/upload-artifact@v4
