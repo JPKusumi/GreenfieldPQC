@@ -253,7 +253,7 @@ namespace GreenfieldPQC.Tests
         }
 
         [Fact]
-        public void Kusumi512Poly1305_EncryptInPlace_ThrowsNotSupported()
+        public async Task Kusumi512Poly1305_EncryptInPlace_ThrowsNotSupported()
         {
             byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512Poly1305);
             byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512Poly1305);
@@ -261,7 +261,7 @@ namespace GreenfieldPQC.Tests
             byte[] buffer = new byte[4096];
 
             Assert.Throws<NotSupportedException>(() => cipher.EncryptInPlace(buffer.AsSpan()));
-            Assert.ThrowsAsync<NotSupportedException>(() => cipher.EncryptInPlaceAsync(buffer.AsMemory()));
+            await Assert.ThrowsAsync<NotSupportedException>(() => cipher.EncryptInPlaceAsync(buffer.AsMemory()));
             Log("Kusumi512Poly1305_EncryptInPlace_ThrowsNotSupported passed");
         }
 
