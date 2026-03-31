@@ -30,11 +30,18 @@ namespace GreenfieldPQC.Cryptography
             if (plaintext == null) throw new ArgumentNullException(nameof(plaintext));
             byte[] ciphertext = _kusumi512.RunCipher(plaintext, startCounter: 1);
             byte[] poly1305Key = _kusumi512.GeneratePoly1305Key();
-            byte[] tag = Poly1305.ComputeTag(poly1305Key, ciphertext);
-            byte[] result = new byte[ciphertext.Length + TagLength];
-            Buffer.BlockCopy(ciphertext, 0, result, 0, ciphertext.Length);
-            Buffer.BlockCopy(tag, 0, result, ciphertext.Length, TagLength);
-            return await Task.FromResult(result).ConfigureAwait(false);
+            try
+            {
+                byte[] tag = Poly1305.ComputeTag(poly1305Key, ciphertext);
+                byte[] result = new byte[ciphertext.Length + TagLength];
+                Buffer.BlockCopy(ciphertext, 0, result, 0, ciphertext.Length);
+                Buffer.BlockCopy(tag, 0, result, ciphertext.Length, TagLength);
+                return await Task.FromResult(result).ConfigureAwait(false);
+            }
+            finally
+            {
+                Array.Clear(poly1305Key, 0, poly1305Key.Length);
+            }
         }
 
         public override byte[] Encrypt(byte[] plaintext)
@@ -42,11 +49,18 @@ namespace GreenfieldPQC.Cryptography
             if (plaintext == null) throw new ArgumentNullException(nameof(plaintext));
             byte[] ciphertext = _kusumi512.RunCipher(plaintext, startCounter: 1);
             byte[] poly1305Key = _kusumi512.GeneratePoly1305Key();
-            byte[] tag = Poly1305.ComputeTag(poly1305Key, ciphertext);
-            byte[] result = new byte[ciphertext.Length + TagLength];
-            Buffer.BlockCopy(ciphertext, 0, result, 0, ciphertext.Length);
-            Buffer.BlockCopy(tag, 0, result, ciphertext.Length, TagLength);
-            return result;
+            try
+            {
+                byte[] tag = Poly1305.ComputeTag(poly1305Key, ciphertext);
+                byte[] result = new byte[ciphertext.Length + TagLength];
+                Buffer.BlockCopy(ciphertext, 0, result, 0, ciphertext.Length);
+                Buffer.BlockCopy(tag, 0, result, ciphertext.Length, TagLength);
+                return result;
+            }
+            finally
+            {
+                Array.Clear(poly1305Key, 0, poly1305Key.Length);
+            }
         }
 
         public override async Task<byte[]> DecryptAsync(byte[] ciphertext, CancellationToken cancellationToken = default)
@@ -60,9 +74,18 @@ namespace GreenfieldPQC.Cryptography
             Buffer.BlockCopy(ciphertext, 0, actualCiphertext, 0, actualCiphertext.Length);
             byte[] poly1305Key = _kusumi512.GeneratePoly1305Key();
             byte[] computedTag = Poly1305.ComputeTag(poly1305Key, actualCiphertext);
-            if (!CryptographicOperations.FixedTimeEquals(tag, computedTag))
-                throw new CryptographicException("Poly1305 tag verification failed.");
-            return await Task.FromResult(_kusumi512.RunCipher(actualCiphertext, startCounter: 1)).ConfigureAwait(false);
+            try
+            {
+                if (!CryptographicOperations.FixedTimeEquals(tag, computedTag))
+                    throw new CryptographicException("Poly1305 tag verification failed.");
+                return await Task.FromResult(_kusumi512.RunCipher(actualCiphertext, startCounter: 1)).ConfigureAwait(false);
+            }
+            finally
+            {
+                Array.Clear(poly1305Key, 0, poly1305Key.Length);
+                Array.Clear(computedTag, 0, computedTag.Length);
+                Array.Clear(tag, 0, tag.Length);
+            }
         }
 
         public override byte[] Decrypt(byte[] ciphertext)
@@ -76,9 +99,18 @@ namespace GreenfieldPQC.Cryptography
             Buffer.BlockCopy(ciphertext, 0, actualCiphertext, 0, actualCiphertext.Length);
             byte[] poly1305Key = _kusumi512.GeneratePoly1305Key();
             byte[] computedTag = Poly1305.ComputeTag(poly1305Key, actualCiphertext);
-            if (!CryptographicOperations.FixedTimeEquals(tag, computedTag))
-                throw new CryptographicException("Poly1305 tag verification failed.");
-            return _kusumi512.RunCipher(actualCiphertext, startCounter: 1);
+            try
+            {
+                if (!CryptographicOperations.FixedTimeEquals(tag, computedTag))
+                    throw new CryptographicException("Poly1305 tag verification failed.");
+                return _kusumi512.RunCipher(actualCiphertext, startCounter: 1);
+            }
+            finally
+            {
+                Array.Clear(poly1305Key, 0, poly1305Key.Length);
+                Array.Clear(computedTag, 0, computedTag.Length);
+                Array.Clear(tag, 0, tag.Length);
+            }
         }
 
         public override Task EncryptInPlaceAsync(Memory<byte> inputOutput, CancellationToken cancellationToken = default)
@@ -114,45 +146,53 @@ namespace GreenfieldPQC.Cryptography
             int bytesInBuffer = 0;
 
             byte[] buffer = new byte[bufferSize];
-            while (true)
+            try
             {
-                int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
-                if (bytesRead == 0) break;
-
-                int offset = 0;
-                while (offset < bytesRead)
+                while (true)
                 {
-                    int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment - bytesInBuffer));
-                    Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
-                    bytesInBuffer += bytesToCopy;
-                    offset += bytesToCopy;
-                    bytesProcessed += bytesToCopy;
+                    int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
+                    if (bytesRead == 0) break;
 
-                    if (bytesInBuffer == bytesPerSegment)
+                    int offset = 0;
+                    while (offset < bytesRead)
                     {
-                        if (nonceGenerator != null)
+                        int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment - bytesInBuffer));
+                        Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
+                        bytesInBuffer += bytesToCopy;
+                        offset += bytesToCopy;
+                        bytesProcessed += bytesToCopy;
+
+                        if (bytesInBuffer == bytesPerSegment)
                         {
-                            UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
-                            segmentProgress?.Report(++segmentCount);
+                            if (nonceGenerator != null)
+                            {
+                                UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
+                                segmentProgress?.Report(++segmentCount);
+                            }
+                            byte[] ciphertext = await EncryptAsync(segmentBuffer, cancellationToken).ConfigureAwait(false);
+                            await output.WriteAsync(ciphertext, 0, ciphertext.Length, cancellationToken).ConfigureAwait(false);
+                            bytesInBuffer = 0;
                         }
-                        byte[] ciphertext = await EncryptAsync(segmentBuffer, cancellationToken).ConfigureAwait(false);
-                        await output.WriteAsync(ciphertext, 0, ciphertext.Length, cancellationToken).ConfigureAwait(false);
-                        bytesInBuffer = 0;
                     }
                 }
-            }
 
-            if (bytesInBuffer > 0)
-            {
-                byte[] finalSegment = new byte[bytesInBuffer];
-                Buffer.BlockCopy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
-                if (nonceGenerator != null)
+                if (bytesInBuffer > 0)
                 {
-                    UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
-                    segmentProgress?.Report(++segmentCount);
+                    byte[] finalSegment = new byte[bytesInBuffer];
+                    Buffer.BlockCopy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
+                    if (nonceGenerator != null)
+                    {
+                        UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
+                        segmentProgress?.Report(++segmentCount);
+                    }
+                    byte[] ciphertext = await EncryptAsync(finalSegment, cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(ciphertext, 0, ciphertext.Length, cancellationToken).ConfigureAwait(false);
                 }
-                byte[] ciphertext = await EncryptAsync(finalSegment, cancellationToken).ConfigureAwait(false);
-                await output.WriteAsync(ciphertext, 0, ciphertext.Length, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
+                Array.Clear(segmentBuffer, 0, segmentBuffer.Length);
             }
         }
 
@@ -168,40 +208,48 @@ namespace GreenfieldPQC.Cryptography
             int bytesInBuffer = 0;
 
             byte[] buffer = new byte[bufferSize];
-            while (input.Read(buffer, 0, bufferSize) is int bytesRead && bytesRead > 0)
+            try
             {
-                int offset = 0;
-                while (offset < bytesRead)
+                while (input.Read(buffer, 0, bufferSize) is int bytesRead && bytesRead > 0)
                 {
-                    int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment - bytesInBuffer));
-                    Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
-                    bytesInBuffer += bytesToCopy;
-                    offset += bytesToCopy;
-                    bytesProcessed += bytesToCopy;
-
-                    if (bytesInBuffer == bytesPerSegment)
+                    int offset = 0;
+                    while (offset < bytesRead)
                     {
-                        if (nonceGenerator != null)
+                        int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment - bytesInBuffer));
+                        Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
+                        bytesInBuffer += bytesToCopy;
+                        offset += bytesToCopy;
+                        bytesProcessed += bytesToCopy;
+
+                        if (bytesInBuffer == bytesPerSegment)
                         {
-                            UpdateNonce(nonceGenerator(bytesProcessed));
+                            if (nonceGenerator != null)
+                            {
+                                UpdateNonce(nonceGenerator(bytesProcessed));
+                            }
+                            byte[] ciphertext = Encrypt(segmentBuffer);
+                            output.Write(ciphertext, 0, ciphertext.Length);
+                            bytesInBuffer = 0;
                         }
-                        byte[] ciphertext = Encrypt(segmentBuffer);
-                        output.Write(ciphertext, 0, ciphertext.Length);
-                        bytesInBuffer = 0;
                     }
                 }
-            }
 
-            if (bytesInBuffer > 0)
-            {
-                byte[] finalSegment = new byte[bytesInBuffer];
-                Buffer.BlockCopy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
-                if (nonceGenerator != null)
+                if (bytesInBuffer > 0)
                 {
-                    UpdateNonce(nonceGenerator(bytesProcessed));
+                    byte[] finalSegment = new byte[bytesInBuffer];
+                    Buffer.BlockCopy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
+                    if (nonceGenerator != null)
+                    {
+                        UpdateNonce(nonceGenerator(bytesProcessed));
+                    }
+                    byte[] ciphertext = Encrypt(finalSegment);
+                    output.Write(ciphertext, 0, ciphertext.Length);
                 }
-                byte[] ciphertext = Encrypt(finalSegment);
-                output.Write(ciphertext, 0, ciphertext.Length);
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
+                Array.Clear(segmentBuffer, 0, segmentBuffer.Length);
             }
         }
 
@@ -218,49 +266,57 @@ namespace GreenfieldPQC.Cryptography
             int bytesInBuffer = 0;
 
             byte[] buffer = new byte[bufferSize];
-            while (true)
+            try
             {
-                int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
-                if (bytesRead == 0) break;
-
-                int offset = 0;
-                while (offset < bytesRead)
+                while (true)
                 {
-                    int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment + TagLength - bytesInBuffer));
-                    Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
-                    bytesInBuffer += bytesToCopy;
-                    offset += bytesToCopy;
-                    bytesProcessed += bytesToCopy;
+                    int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
+                    if (bytesRead == 0) break;
 
-                    if (bytesInBuffer >= bytesPerSegment + TagLength)
+                    int offset = 0;
+                    while (offset < bytesRead)
                     {
-                        if (nonceGenerator != null)
+                        int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment + TagLength - bytesInBuffer));
+                        Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
+                        bytesInBuffer += bytesToCopy;
+                        offset += bytesToCopy;
+                        bytesProcessed += bytesToCopy;
+
+                        if (bytesInBuffer >= bytesPerSegment + TagLength)
                         {
-                            UpdateNonce(await nonceGenerator(bytesProcessed - bytesInBuffer).ConfigureAwait(false));
-                            segmentProgress?.Report(++segmentCount);
+                            if (nonceGenerator != null)
+                            {
+                                UpdateNonce(await nonceGenerator(bytesProcessed - bytesInBuffer).ConfigureAwait(false));
+                                segmentProgress?.Report(++segmentCount);
+                            }
+                            byte[] segment = new byte[bytesPerSegment + TagLength];
+                            Array.Copy(segmentBuffer, 0, segment, 0, bytesPerSegment + TagLength);
+                            byte[] plaintext = await DecryptAsync(segment, cancellationToken).ConfigureAwait(false);
+                            await output.WriteAsync(plaintext, 0, plaintext.Length, cancellationToken).ConfigureAwait(false);
+                            bytesInBuffer = 0;
                         }
-                        byte[] segment = new byte[bytesPerSegment + TagLength];
-                        Array.Copy(segmentBuffer, 0, segment, 0, bytesPerSegment + TagLength);
-                        byte[] plaintext = await DecryptAsync(segment, cancellationToken).ConfigureAwait(false);
-                        await output.WriteAsync(plaintext, 0, plaintext.Length, cancellationToken).ConfigureAwait(false);
-                        bytesInBuffer = 0;
                     }
                 }
-            }
 
-            if (bytesInBuffer > 0)
-            {
-                if (bytesInBuffer < TagLength)
-                    throw new CryptographicException("Incomplete segment: insufficient data for Poly1305 tag.");
-                byte[] finalSegment = new byte[bytesInBuffer];
-                Array.Copy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
-                if (nonceGenerator != null)
+                if (bytesInBuffer > 0)
                 {
-                    UpdateNonce(await nonceGenerator(bytesProcessed - bytesInBuffer).ConfigureAwait(false));
-                    segmentProgress?.Report(++segmentCount);
+                    if (bytesInBuffer < TagLength)
+                        throw new CryptographicException("Incomplete segment: insufficient data for Poly1305 tag.");
+                    byte[] finalSegment = new byte[bytesInBuffer];
+                    Array.Copy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
+                    if (nonceGenerator != null)
+                    {
+                        UpdateNonce(await nonceGenerator(bytesProcessed - bytesInBuffer).ConfigureAwait(false));
+                        segmentProgress?.Report(++segmentCount);
+                    }
+                    byte[] plaintext = await DecryptAsync(finalSegment, cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(plaintext, 0, plaintext.Length, cancellationToken).ConfigureAwait(false);
                 }
-                byte[] plaintext = await DecryptAsync(finalSegment, cancellationToken).ConfigureAwait(false);
-                await output.WriteAsync(plaintext, 0, plaintext.Length, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
+                Array.Clear(segmentBuffer, 0, segmentBuffer.Length);
             }
         }
 
@@ -276,45 +332,63 @@ namespace GreenfieldPQC.Cryptography
             int bytesInBuffer = 0;
 
             byte[] buffer = new byte[bufferSize];
-            while (input.Read(buffer, 0, bufferSize) is int bytesRead && bytesRead > 0)
+            try
             {
-                int offset = 0;
-                while (offset < bytesRead)
+                while (input.Read(buffer, 0, bufferSize) is int bytesRead && bytesRead > 0)
                 {
-                    int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment + TagLength - bytesInBuffer));
-                    Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
-                    bytesInBuffer += bytesToCopy;
-                    offset += bytesToCopy;
-                    bytesProcessed += bytesToCopy;
-
-                    if (bytesInBuffer >= bytesPerSegment + TagLength)
+                    int offset = 0;
+                    while (offset < bytesRead)
                     {
-                        if (nonceGenerator != null)
+                        int bytesToCopy = Math.Min(bytesRead - offset, (int)(bytesPerSegment + TagLength - bytesInBuffer));
+                        Buffer.BlockCopy(buffer, offset, segmentBuffer, bytesInBuffer, bytesToCopy);
+                        bytesInBuffer += bytesToCopy;
+                        offset += bytesToCopy;
+                        bytesProcessed += bytesToCopy;
+
+                        if (bytesInBuffer >= bytesPerSegment + TagLength)
                         {
-                            UpdateNonce(nonceGenerator(bytesProcessed - bytesInBuffer));
+                            if (nonceGenerator != null)
+                            {
+                                UpdateNonce(nonceGenerator(bytesProcessed - bytesInBuffer));
+                            }
+                            byte[] segment = new byte[bytesPerSegment + TagLength];
+                            Array.Copy(segmentBuffer, 0, segment, 0, bytesPerSegment + TagLength);
+                            byte[] plaintext = Decrypt(segment);
+                            output.Write(plaintext, 0, plaintext.Length);
+                            bytesInBuffer = 0;
                         }
-                        byte[] segment = new byte[bytesPerSegment + TagLength];
-                        Array.Copy(segmentBuffer, 0, segment, 0, bytesPerSegment + TagLength);
-                        byte[] plaintext = Decrypt(segment);
-                        output.Write(plaintext, 0, plaintext.Length);
-                        bytesInBuffer = 0;
                     }
                 }
-            }
 
-            if (bytesInBuffer > 0)
-            {
-                if (bytesInBuffer < TagLength)
-                    throw new CryptographicException("Incomplete segment: insufficient data for Poly1305 tag.");
-                byte[] finalSegment = new byte[bytesInBuffer];
-                Array.Copy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
-                if (nonceGenerator != null)
+                if (bytesInBuffer > 0)
                 {
-                    UpdateNonce(nonceGenerator(bytesProcessed - bytesInBuffer));
+                    if (bytesInBuffer < TagLength)
+                        throw new CryptographicException("Incomplete segment: insufficient data for Poly1305 tag.");
+                    byte[] finalSegment = new byte[bytesInBuffer];
+                    Array.Copy(segmentBuffer, 0, finalSegment, 0, bytesInBuffer);
+                    if (nonceGenerator != null)
+                    {
+                        UpdateNonce(nonceGenerator(bytesProcessed - bytesInBuffer));
+                    }
+                    byte[] plaintext = Decrypt(finalSegment);
+                    output.Write(plaintext, 0, plaintext.Length);
                 }
-                byte[] plaintext = Decrypt(finalSegment);
-                output.Write(plaintext, 0, plaintext.Length);
             }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
+                Array.Clear(segmentBuffer, 0, segmentBuffer.Length);
+            }
+        }
+
+        /// <summary>
+        /// Disposes the inner Kusumi512 cipher (clearing its key-derived state) and then
+        /// clears the raw key and nonce bytes via the base class.
+        /// </summary>
+        public override void Dispose()
+        {
+            _kusumi512.Dispose();
+            base.Dispose();
         }
 
         protected override void UpdateNonce(byte[] newNonce)

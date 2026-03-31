@@ -316,5 +316,91 @@ namespace GreenfieldPQC.Tests
             Assert.Equal(12, nonce.Length);
             Log("GenerateNonce_Kusumi512Poly1305_Returns12Bytes passed");
         }
+
+        // ========== v1.1.4: DISPOSE / MEMORY HYGIENE TESTS ==========
+
+        [Fact]
+        public void Kusumi512_Dispose_ZerosKeyAndNonce()
+        {
+            // Arrange: keep references to the key/nonce arrays to check after Dispose
+            byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512);
+            byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
+            var cipher = new Kusumi512(key, nonce);
+
+            // Pre-condition: arrays are non-zero
+            Assert.True(key.Any(b => b != 0), "Key must be non-zero before dispose.");
+
+            // Act
+            cipher.Dispose();
+
+            // Assert: the shared byte arrays (not copies) are zeroed by Dispose
+            Assert.All(key, b => Assert.Equal(0, b));
+            Assert.All(nonce, b => Assert.Equal(0, b));
+            Log("Kusumi512_Dispose_ZerosKeyAndNonce passed");
+        }
+
+        [Fact]
+        public void Kusumi512_Dispose_DoesNotThrow()
+        {
+            byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512);
+            byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
+            var cipher = new Kusumi512(key, nonce);
+
+            var ex = Record.Exception(() => cipher.Dispose());
+            Assert.Null(ex);
+            Log("Kusumi512_Dispose_DoesNotThrow passed");
+        }
+
+        [Fact]
+        public void Kusumi512Poly1305_Dispose_ZerosKeyAndNonce()
+        {
+            // Arrange
+            byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512Poly1305);
+            byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512Poly1305);
+            var cipher = new Kusumi512Poly1305(key, nonce);
+
+            // Pre-condition
+            Assert.True(key.Any(b => b != 0), "Key must be non-zero before dispose.");
+
+            // Act
+            cipher.Dispose();
+
+            // Assert: Dispose() cascades through inner Kusumi512, so the shared key array is zeroed
+            Assert.All(key, b => Assert.Equal(0, b));
+            Assert.All(nonce, b => Assert.Equal(0, b));
+            Log("Kusumi512Poly1305_Dispose_ZerosKeyAndNonce passed");
+        }
+
+        [Fact]
+        public void Kusumi512Poly1305_Dispose_DoesNotThrow()
+        {
+            byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512Poly1305);
+            byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512Poly1305);
+            var cipher = new Kusumi512Poly1305(key, nonce);
+
+            var ex = Record.Exception(() => cipher.Dispose());
+            Assert.Null(ex);
+            Log("Kusumi512Poly1305_Dispose_DoesNotThrow passed");
+        }
+
+        [Fact]
+        public void Kusumi512_UsingStatement_DisposesOnExit()
+        {
+            byte[] key = CryptoFactory.GenerateKey(CipherAlgorithm.Kusumi512);
+            byte[] nonce = CryptoFactory.GenerateNonce(CipherAlgorithm.Kusumi512);
+
+            using (var cipher = CryptoFactory.CreateKusumi512(key, nonce))
+            {
+                // Encrypt something to populate internal state
+                byte[] data = new byte[200];
+                RandomNumberGenerator.Fill(data);
+                cipher.Encrypt(data);
+            } // Dispose called here
+
+            // After the using block the key/nonce arrays should be zeroed
+            Assert.All(key, b => Assert.Equal(0, b));
+            Assert.All(nonce, b => Assert.Equal(0, b));
+            Log("Kusumi512_UsingStatement_DisposesOnExit passed");
+        }
     }
 }
