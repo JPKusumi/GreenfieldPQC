@@ -85,8 +85,8 @@ jobs:
         run: |
           LIB="lib/${{ matrix.config.libname }}"
           echo "=== Verifying ${LIB} is AArch64 (ARM64) ==="
-          file "${LIB}"
-          if ! file "${LIB}" | grep -qiE "aarch64|ARM aarch64"; then
+          file -L "${LIB}"
+          if ! file -L "${LIB}" | grep -qiE "aarch64|ARM aarch64"; then
             echo "ERROR: ${LIB} is not an AArch64/ARM64 binary — cross-compile may have produced the wrong architecture."
             exit 1
           fi
