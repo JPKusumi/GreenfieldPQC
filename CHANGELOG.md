@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.4] - 2026-03-31
 
 ### Added
-- **`IJweProvider.DecryptJweBytes`**: New method that returns the decrypted JWE payload as `byte[]` instead of a `string`. Because .NET strings are immutable and cannot be reliably zeroed, callers that need best-effort plaintext memory hygiene should use this overload and call `Array.Clear` on the returned array when finished.
+- **`IJweProvider.DecryptJweBytes`**: New method that returns the decrypted JWE payload as `byte[]` instead of a `string`. Because .NET strings are immutable and cannot be reliably zeroed, callers that need best-effort plaintext memory hygiene should use this overload and call `CryptographicOperations.ZeroMemory` on the returned array when finished.
 - **`IJweProvider.CreateJwe(ReadOnlySpan<byte>, byte[])`**: New overload that accepts the payload as raw bytes instead of an `object`. This avoids the intermediate JSON serialization string and keeps callers in `byte[]` land, so they can control the lifetime of the plaintext buffer.
 - Existing `CreateJwe(object, byte[])` and `DecryptJwe(string, byte[])` APIs are unchanged and fully backwards compatible.
 - Updated XML doc comments on `IJweProvider` to include explicit security guidance: never log decrypted payloads or key material; prefer the new `byte[]` overloads for sensitive data.
@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AEAD ephemeral key material clearing**: `Kusumi512Poly1305.Encrypt`, `Decrypt`, `EncryptAsync`, and `DecryptAsync` now clear `poly1305Key` (and the tag comparison arrays in the decrypt path) in `finally` blocks.
 
 ### Security guidance
-- Do not log or include plaintext payloads or encryption keys in telemetry. Strings in .NET are immutable and cannot be reliably zeroed; use the new `byte[]`-returning `DecryptJweBytes` and the `ReadOnlySpan<byte>`-accepting `CreateJwe` overload for sensitive payloads, and zero the arrays with `Array.Clear` when done.
+- Do not log or include plaintext payloads or encryption keys in telemetry. Strings in .NET are immutable and cannot be reliably zeroed; use the new `byte[]`-returning `DecryptJweBytes` and the `ReadOnlySpan<byte>`-accepting `CreateJwe` overload for sensitive payloads, and zero the arrays with `CryptographicOperations.ZeroMemory` when done.
 - Note: best-effort zeroing applies only to managed memory. Native library (liboqs) behavior for key material passed via P/Invoke is outside GreenfieldPQC's control.
 
 As of March 31, 2026, v1.1.4 was released with best-effort secret/plaintext handling improvements focused on JWT providers and symmetric cipher memory hygiene.
