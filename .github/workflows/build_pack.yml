@@ -183,7 +183,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: |
+            8.0.419
+            10.0.201
 
       - name: Restore NuGet packages
         run: dotnet restore
