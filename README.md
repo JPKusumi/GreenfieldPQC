@@ -37,7 +37,7 @@ For more commentary from Grok, see REVIEW.md and BENCHMARKS.md in the repo root.
 
 Via NuGet:
 ```
-dotnet add package GreenfieldPQC --version 1.1.3
+dotnet add package GreenfieldPQC --version 1.1.4
 ```
 Supports .NET 8+ and .NET 10. Bundles oqs.dll, a native dll, as a transitive dependency for supported platforms (win/linux/osx, x64/arm64). No additional configuration needed. Note that win-arm64 is not a supported platform.  
 
@@ -226,10 +226,12 @@ Hybrid encryption: Kyber for key wrapping, Kusumi512 for payload.
 ### In Practice
 API Highlights (Kyber levels: 1, 3, 5; Kusumi algorithm: Kusumi512 plain or Kusumi512Poly1305 AEAD):
 - CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm): Returns IJweProvider.
-- CreateJwe(payload, publicKey): Returns JWE string.
+- CreateJwe(payload, publicKey): Returns JWE string (serializes the object payload to JSON, then encrypts).
+- CreateJwe(ReadOnlySpan\<byte\> payloadBytes, publicKey): Returns JWE string (encrypts raw bytes directly, no intermediate string). **Prefer this for sensitive byte[] payloads.**
 - DecryptJwe(jweToken, privateKey): Returns raw decrypted payload as string (JSON); deserialize as needed if valid, throws otherwise.
+- DecryptJweBytes(jweToken, privateKey): Returns raw decrypted payload as **byte[]**. The caller can zero the array with `Array.Clear` after use. **Prefer this when the ability to clear plaintext from memory is required.**
 
-Round-Trip Example:
+Round-Trip Example (string API, backwards-compatible):
 ```csharp
 var jweProvider = CryptoFactory.CreateJweProvider(KyberSecurityLevel.ML_KEM_768, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305);  // Level 3 Kyber, AEAD Kusumi
 var (pubKey, privKey) = CryptoFactory.CreateKyber(KyberSecurityLevel.ML_KEM_768).GenerateKeyPair();
@@ -239,6 +241,27 @@ string decryptedJson = jweProvider.DecryptJwe(jweToken, privKey);
 dynamic decrypted = JsonSerializer.Deserialize<dynamic>(decryptedJson);
 Assert.Equal(payload.secret, decrypted.secret);
 ```
+
+Round-Trip Example (byte[] API — preferred for sensitive payloads):
+```csharp
+var jweProvider = CryptoFactory.CreateJweProvider(KyberSecurityLevel.ML_KEM_768, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305);
+var (pubKey, privKey) = CryptoFactory.CreateKyber(KyberSecurityLevel.ML_KEM_768).GenerateKeyPair();
+
+// Encrypt raw bytes (no intermediate JSON string)
+byte[] sensitivePayload = System.Text.Encoding.UTF8.GetBytes("sensitive data");
+string jweToken = jweProvider.CreateJwe(sensitivePayload.AsSpan(), pubKey);
+
+// Decrypt to bytes so the caller controls the lifetime
+byte[] decryptedBytes = jweProvider.DecryptJweBytes(jweToken, privKey);
+// ... process decryptedBytes ...
+Array.Clear(decryptedBytes, 0, decryptedBytes.Length);  // Zero when done
+```
+
+**Security Guidance:**
+- **Never log or transmit plaintext payloads or key material in telemetry.** Treat decrypted data as a secret.
+- .NET strings are immutable and cannot be reliably zeroed from memory. If you need best-effort plaintext memory hygiene, use `DecryptJweBytes` (returns `byte[]`) and call `Array.Clear` on the result when finished.
+- For payload creation, use the `CreateJwe(ReadOnlySpan<byte>, byte[])` overload to avoid an intermediate JSON string being materialized on the heap.
+- Note: this is best-effort in managed code. The native liboqs library handles key material internally, and its memory behavior is outside GreenfieldPQC's control.
 
 Best Practices: Use HTTPS; rotate keys; nest JWS in JWE for signed-encrypted tokens.
 

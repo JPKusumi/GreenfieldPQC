@@ -87,16 +87,23 @@ namespace GreenfieldPQC.Cryptography
             long bytesPerSegment = 1L << 20; // 1MB
             blockCounter = 1;
 
-            int bytesRead;
-            while ((bytesRead = input.Read(buffer, 0, bufferSize)) > 0)
+            try
             {
-                if (nonceGenerator != null && bytesProcessed / bytesPerSegment > (bytesProcessed - bytesRead) / bytesPerSegment)
+                int bytesRead;
+                while ((bytesRead = input.Read(buffer, 0, bufferSize)) > 0)
                 {
-                    UpdateNonce(nonceGenerator(bytesProcessed));
+                    if (nonceGenerator != null && bytesProcessed / bytesPerSegment > (bytesProcessed - bytesRead) / bytesPerSegment)
+                    {
+                        UpdateNonce(nonceGenerator(bytesProcessed));
+                    }
+                    EncryptInPlace(buffer.AsSpan(0, bytesRead));
+                    output.Write(buffer, 0, bytesRead);
+                    bytesProcessed += bytesRead;
                 }
-                EncryptInPlace(buffer.AsSpan(0, bytesRead));
-                output.Write(buffer, 0, bytesRead);
-                bytesProcessed += bytesRead;
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
             }
         }
 
@@ -141,23 +148,30 @@ namespace GreenfieldPQC.Cryptography
             long bytesPerSegment = 1024 * 1024;
             blockCounter = 1;
 
-            while (true)
+            try
             {
-                int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
-                if (bytesRead == 0) break;
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (nonceGenerator != null && bytesProcessed / bytesPerSegment > (bytesProcessed - bytesRead) / bytesPerSegment)
+                while (true)
                 {
-                    UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
-                    segmentProgress?.Report(++segmentCount);
+                    int bytesRead = await input.ReadAsync(buffer, 0, bufferSize, cancellationToken).ConfigureAwait(false);
+                    if (bytesRead == 0) break;
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (nonceGenerator != null && bytesProcessed / bytesPerSegment > (bytesProcessed - bytesRead) / bytesPerSegment)
+                    {
+                        UpdateNonce(await nonceGenerator(bytesProcessed).ConfigureAwait(false));
+                        segmentProgress?.Report(++segmentCount);
+                    }
+                    await EncryptInPlaceAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+                    bytesProcessed += bytesRead;
+                    if (totalBytes > 0)
+                        progress?.Report((double)bytesProcessed / totalBytes);
                 }
-                await EncryptInPlaceAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-                await output.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
-                bytesProcessed += bytesRead;
-                if (totalBytes > 0)
-                    progress?.Report((double)bytesProcessed / totalBytes);
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
             }
         }
 
@@ -388,6 +402,18 @@ namespace GreenfieldPQC.Cryptography
         public void SetNonce(byte[] newNonce)
         {
             UpdateNonce(newNonce);
+        }
+
+        /// <summary>
+        /// Clears all sensitive state derived from the key (start state, working state, keystream buffer)
+        /// and then calls the base Dispose to clear the raw key and nonce bytes.
+        /// </summary>
+        public override void Dispose()
+        {
+            Array.Clear(_startState, 0, _startState.Length);
+            Array.Clear(_workingState, 0, _workingState.Length);
+            Array.Clear(_keystreamBuffer, 0, _keystreamBuffer.Length);
+            base.Dispose();
         }
 
         internal byte[] GeneratePoly1305Key()
