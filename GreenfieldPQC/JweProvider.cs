@@ -17,6 +17,17 @@ namespace GreenfieldPQC.Cryptography
 
         public string CreateJwe(object payload, byte[] recipientPublicKey)
         {
+            byte[] payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+            return CreateJweFromBytes(payloadBytes, recipientPublicKey);
+        }
+
+        public string CreateJwe(ReadOnlySpan<byte> payloadBytes, byte[] recipientPublicKey)
+        {
+            return CreateJweFromBytes(payloadBytes, recipientPublicKey);
+        }
+
+        private string CreateJweFromBytes(ReadOnlySpan<byte> payloadBytes, byte[] recipientPublicKey)
+        {
             // Header with alg (ML-KEM) and enc (KUSUMI512-POLY1305)
             var header = new { alg = "ML-KEM-768", enc = "KUSUMI512-POLY1305" };  // Adjust levels
             string encodedHeader = Base64UrlEncode(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(header)));
@@ -35,9 +46,8 @@ namespace GreenfieldPQC.Cryptography
                 ? CryptoFactory.CreateKusumi512Poly1305(cek, iv)
                 : CryptoFactory.CreateKusumi512(cek, iv);
 
-            // Serialize and encrypt payload
-            byte[] payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
-            byte[] ciphertextAndTag = cipher.Encrypt(payloadBytes);  // Returns ciphertext + tag
+            // Encrypt payload bytes
+            byte[] ciphertextAndTag = cipher.Encrypt(payloadBytes.ToArray());  // Returns ciphertext + tag
 
             // Handle split with check for short/empty
             byte[] ciphertextArr;
@@ -59,7 +69,36 @@ namespace GreenfieldPQC.Cryptography
             return $"{encodedHeader}.{Base64UrlEncode(encryptedKey)}.{Base64UrlEncode(iv)}.{Base64UrlEncode(ciphertextArr)}.{Base64UrlEncode(authTagArr)}";
         }
 
+        public byte[] DecryptJweBytes(string jweToken, byte[] recipientPrivateKey)
+        {
+            return DecryptJweCore(jweToken, recipientPrivateKey);
+        }
+
         public string DecryptJwe(string jweToken, byte[] recipientPrivateKey)
+        {
+            byte[] payloadBytes = DecryptJweCore(jweToken, recipientPrivateKey);
+
+            // Get the decrypted JSON string
+            string jsonString = Encoding.UTF8.GetString(payloadBytes);
+            
+            // If the payload was a string (like a nested JWS token), it will be JSON-serialized with quotes
+            // We need to deserialize it to get the original string back
+            // Check if it's a JSON string literal (starts and ends with quotes, after trimming whitespace)
+            string trimmed = jsonString.Trim();
+            if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
+            {
+                // It's a JSON string literal, deserialize to get the actual string
+                return JsonSerializer.Deserialize<string>(jsonString) 
+                       ?? throw new InvalidOperationException("Deserialization returned null");
+            }
+            else
+            {
+                // It's a JSON object or other type, return the raw JSON string
+                return jsonString;
+            }
+        }
+
+        private byte[] DecryptJweCore(string jweToken, byte[] recipientPrivateKey)
         {
             string[] parts = jweToken.Split('.');
             if (parts.Length != 5) throw new ArgumentException("Invalid JWE format");
@@ -85,27 +124,8 @@ namespace GreenfieldPQC.Cryptography
             Array.Copy(ciphertext, 0, ciphertextAndTag, 0, ciphertext.Length);
             Array.Copy(authTag, 0, ciphertextAndTag, ciphertext.Length, authTag.Length);
 
-            // Decrypt
-            byte[] payloadBytes = cipher.Decrypt(ciphertextAndTag);  // Returns plaintext or throws on tamper
-
-            // Get the decrypted JSON string
-            string jsonString = Encoding.UTF8.GetString(payloadBytes);
-            
-            // If the payload was a string (like a nested JWS token), it will be JSON-serialized with quotes
-            // We need to deserialize it to get the original string back
-            // Check if it's a JSON string literal (starts and ends with quotes, after trimming whitespace)
-            string trimmed = jsonString.Trim();
-            if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
-            {
-                // It's a JSON string literal, deserialize to get the actual string
-                return JsonSerializer.Deserialize<string>(jsonString) 
-                       ?? throw new InvalidOperationException("Deserialization returned null");
-            }
-            else
-            {
-                // It's a JSON object or other type, return the raw JSON string
-                return jsonString;
-            }
+            // Decrypt and return raw payload bytes
+            return cipher.Decrypt(ciphertextAndTag);  // Returns plaintext or throws on tamper
         }
 
         // Utilities (add to a helper class if not existing)

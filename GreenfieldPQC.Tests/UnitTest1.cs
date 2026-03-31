@@ -1168,5 +1168,107 @@ namespace GreenfieldPQC.Tests
             Assert.Equal("admin", element.GetProperty("roles")[0].GetString());
             Log("JweProvider_CreateJwe_ComplexNestedPayload_RoundTrip passed");
         }
+
+        // ========== v1.1.4: BYTE[] OVERLOAD TESTS ==========
+
+        [Fact]
+        public void JweProvider_DecryptJweBytes_RoundTrip()
+        {
+            // Arrange
+            var kyberLevel = 3;
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
+            var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            var payload = new { sub = "user123", data = "sensitive content" };
+
+            // Act
+            string jweToken = jweProvider.CreateJwe(payload, publicKey);
+            byte[] decryptedBytes = jweProvider.DecryptJweBytes(jweToken, privateKey);
+
+            // Assert: bytes round-trip matches string round-trip
+            string decryptedJson = jweProvider.DecryptJwe(jweToken, privateKey);
+            Assert.NotNull(decryptedBytes);
+            Assert.True(decryptedBytes.Length > 0);
+            Assert.Equal(decryptedJson, Encoding.UTF8.GetString(decryptedBytes));
+
+            // Deserialize from bytes to validate content
+            JsonElement element = JsonSerializer.Deserialize<JsonElement>(decryptedBytes);
+            Assert.Equal("user123", element.GetProperty("sub").GetString());
+            Assert.Equal("sensitive content", element.GetProperty("data").GetString());
+
+            // Demonstrate that the caller can zero the bytes after use
+            Array.Clear(decryptedBytes, 0, decryptedBytes.Length);
+            Assert.All(decryptedBytes, b => Assert.Equal(0, b));
+
+            Log("JweProvider_DecryptJweBytes_RoundTrip passed");
+        }
+
+        [Fact]
+        public void JweProvider_CreateJwe_ByteSpanPayload_RoundTrip()
+        {
+            // Arrange
+            var kyberLevel = 3;
+            var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
+            var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
+            int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+            var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+
+            // Use raw bytes (e.g., a binary payload) rather than a serialized object
+            byte[] rawPayload = Encoding.UTF8.GetBytes("raw binary payload for secure transport");
+
+            // Act: create JWE from raw bytes
+            string jweToken = jweProvider.CreateJwe(rawPayload.AsSpan(), publicKey);
+
+            // Decrypt back to bytes
+            byte[] decryptedBytes = jweProvider.DecryptJweBytes(jweToken, privateKey);
+
+            // Assert
+            Assert.NotNull(jweToken);
+            Assert.Equal(5, jweToken.Split('.').Length);
+            Assert.Equal(rawPayload, decryptedBytes);
+
+            Log("JweProvider_CreateJwe_ByteSpanPayload_RoundTrip passed");
+        }
+
+        [Fact]
+        public void JweProvider_CreateJwe_ByteSpanPayload_VariousLevels_RoundTrip()
+        {
+            // Verify the byte[] overload works across all Kyber levels and cipher variants
+            int[] kyberLevels = [1, 3, 5];
+            CryptoFactory.CipherAlgorithm[] algorithms = [CryptoFactory.CipherAlgorithm.Kusumi512, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305];
+
+            foreach (var kyberLevel in kyberLevels)
+            {
+                foreach (var algorithm in algorithms)
+                {
+                    var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, algorithm);
+                    int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
+                    var (publicKey, privateKey) = CryptoFactory.CreateKyber(kyberParam).GenerateKeyPair();
+                    byte[] rawPayload = Encoding.UTF8.GetBytes($"payload for level {kyberLevel} algorithm {algorithm}");
+
+                    string jweToken = jweProvider.CreateJwe(rawPayload.AsSpan(), publicKey);
+                    byte[] decryptedBytes = jweProvider.DecryptJweBytes(jweToken, privateKey);
+
+                    Assert.Equal(rawPayload, decryptedBytes);
+                    Log($"JweProvider_CreateJwe_ByteSpanPayload_Level{kyberLevel}_{algorithm}_RoundTrip passed");
+                }
+            }
+        }
+
+        [Fact]
+        public void JweProvider_DecryptJweBytes_InvalidFormat_ThrowsException()
+        {
+            // Arrange
+            var provider = CryptoFactory.CreateJweProvider(3, CryptoFactory.CipherAlgorithm.Kusumi512);
+            byte[] dummyPrivKey = new byte[2400];  // Correct ML-KEM-768 private key size (not used; format check fires first)
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => provider.DecryptJweBytes("invalid.token", dummyPrivKey));
+            Assert.Throws<ArgumentException>(() => provider.DecryptJweBytes("only.two.parts", dummyPrivKey));
+
+            Log("JweProvider_DecryptJweBytes_InvalidFormat_ThrowsException passed");
+        }
     }
 }
