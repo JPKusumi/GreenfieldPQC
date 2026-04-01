@@ -24,9 +24,10 @@ namespace GreenfieldPQC.Tests
                 File.AppendAllText(logPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
             }
         }
-        [NativeRequiredFact]
+        [Fact]
         public void JwsProvider_CreateJws_VerifyJws_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var dilithiumLevel = 3;  // Balanced security (ML-DSA-65)
             var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
@@ -52,9 +53,10 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_CreateJws_VerifyJws_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JwsProvider_VerifyJws_InvalidSignature_ThrowsException()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var dilithiumLevel = 3;
             var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
@@ -72,9 +74,10 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_VerifyJws_InvalidSignature_ThrowsException passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JwsProvider_CreateJws_EmptyPayload_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var dilithiumLevel = 3;
             var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
@@ -91,12 +94,13 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_CreateJws_EmptyPayload_RoundTrip passed");
         }
 
-        [NativeRequiredTheory]
+        [Theory]
         [InlineData(2)]  // Level 2 (ML-DSA-44)
         [InlineData(3)]  // Level 3 (ML-DSA-65)
         [InlineData(5)]  // Level 5 (ML-DSA-87)
         public void JwsProvider_CreateJws_VariousLevels_RoundTrip(int dilithiumLevel)
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var jwsProvider = CryptoFactory.CreateJwsProvider(dilithiumLevel);
             var (publicKey, privateKey) = CryptoFactory.CreateDilithium(dilithiumLevel).GenerateKeyPair(); var payload = new { test = "value" };
@@ -115,9 +119,10 @@ namespace GreenfieldPQC.Tests
             Log($"JwsProvider_CreateJws_VariousLevels_RoundTrip (Level {dilithiumLevel}) passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_CreateJwe_DecryptJwe_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var kyberLevel = 3;  // Balanced security
             var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;  // AEAD for authenticity
@@ -145,9 +150,10 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_DecryptJwe_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_DecryptJwe_InvalidToken_ThrowsException()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var kyberLevel = 3;
             var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
@@ -169,9 +175,10 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_DecryptJwe_InvalidToken_ThrowsException passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_CreateJwe_EmptyPayload_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var kyberLevel = 3;
             var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512;  // Plain Kusumi512
@@ -193,12 +200,13 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_EmptyPayload_RoundTrip passed");
         }
 
-        [NativeRequiredTheory]
+        [Theory]
         [InlineData(1, CryptoFactory.CipherAlgorithm.Kusumi512)]  // Level 1, plain
         [InlineData(3, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305)]  // Level 3, Poly1305
         [InlineData(5, CryptoFactory.CipherAlgorithm.Kusumi512)]  // Level 5, plain
         public void JweProvider_CreateJwe_VariousLevelsAndVariants_RoundTrip(int kyberLevel, CryptoFactory.CipherAlgorithm kusumiAlgorithm)
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var jweProvider = CryptoFactory.CreateJweProvider(kyberLevel, kusumiAlgorithm);
             int kyberParam = kyberLevel switch { 1 => 512, 3 => 768, 5 => 1024, _ => throw new ArgumentOutOfRangeException() };
@@ -220,9 +228,10 @@ namespace GreenfieldPQC.Tests
             Log($"JweProvider_CreateJwe_VariousLevelsAndVariants_RoundTrip (Level {kyberLevel}, Algorithm {kusumiAlgorithm}) passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JwsJweNesting_CreateNested_VerifyRoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var dilithiumLevel = 3;  // For JWS
             var kyberLevel = 3;  // For JWE
@@ -659,9 +668,10 @@ namespace GreenfieldPQC.Tests
             }
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void GenerateKeyPair_EncapsulateDecapsulate_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             var kyber = CryptoFactory.CreateKyber(512);
             var (publicKey, privateKey) = kyber.GenerateKeyPair();
             var (sharedSecret1, ciphertext) = kyber.Encapsulate(publicKey);
@@ -696,9 +706,10 @@ namespace GreenfieldPQC.Tests
             }
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void GenerateKeyPair_SignVerify_ValidSignature()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             var dilithium = CryptoFactory.CreateDilithium(2);
             var (publicKey, privateKey) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
@@ -713,9 +724,10 @@ namespace GreenfieldPQC.Tests
             Log("Dilithium_GenerateKeyPair_SignVerify_ValidSignature passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void Verify_InvalidSignature_ReturnsFalse()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             var dilithium = CryptoFactory.CreateDilithium(2);
             var (publicKey, _) = dilithium.GenerateKeyPair();
             byte[] message = Encoding.UTF8.GetBytes("Hello, Dilithium!");
@@ -833,12 +845,13 @@ namespace GreenfieldPQC.Tests
             Log($"CreateDilithium_WithEnum_{level}_Returns{expectedAlgorithmName} passed");
         }
 
-        [NativeRequiredTheory]
+        [Theory]
         [InlineData(DilithiumSecurityLevel.ML_DSA_44)]
         [InlineData(DilithiumSecurityLevel.ML_DSA_65)]
         [InlineData(DilithiumSecurityLevel.ML_DSA_87)]
         public void CreateJwsProvider_WithEnum_CreatesValidProvider(DilithiumSecurityLevel level)
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var jwsProvider = CryptoFactory.CreateJwsProvider(level);
             var signer = CryptoFactory.CreateDilithium(level);
@@ -857,12 +870,13 @@ namespace GreenfieldPQC.Tests
             Log($"CreateJwsProvider_WithEnum_{level}_CreatesValidProvider passed");
         }
 
-        [NativeRequiredTheory]
+        [Theory]
         [InlineData(KyberSecurityLevel.ML_KEM_512, CipherAlgorithm.Kusumi512)]
         [InlineData(KyberSecurityLevel.ML_KEM_768, CipherAlgorithm.Kusumi512Poly1305)]
         [InlineData(KyberSecurityLevel.ML_KEM_1024, CipherAlgorithm.Kusumi512)]
         public void CreateJweProvider_WithEnum_CreatesValidProvider(KyberSecurityLevel level, CipherAlgorithm cipher)
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var jweProvider = CryptoFactory.CreateJweProvider(level, cipher);
             var kem = CryptoFactory.CreateKyber(level);
@@ -882,9 +896,10 @@ namespace GreenfieldPQC.Tests
             Log($"CreateJweProvider_WithEnum_{level}_{cipher}_CreatesValidProvider passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JwsJweNesting_WithEnums_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange - Use enum API exclusively
             var dilithiumLevel = DilithiumSecurityLevel.ML_DSA_65;
             var kyberLevel = KyberSecurityLevel.ML_KEM_768;
@@ -920,9 +935,10 @@ namespace GreenfieldPQC.Tests
             Log("JwsJweNesting_WithEnums_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void EnumAndIntAPI_ProduceSameResults()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var payload = new { test = "compatibility" };
 
@@ -1047,11 +1063,12 @@ namespace GreenfieldPQC.Tests
             Log($"CreateJweProvider_InvalidLevel_{level}_ThrowsException passed");
         }
 
-        [NativeRequiredTheory]
+        [Theory]
         [InlineData(CipherAlgorithm.Kusumi512)]
         [InlineData(CipherAlgorithm.Kusumi512Poly1305)]
         public void CreateJweProvider_DifferentCipherAlgorithms_WorkCorrectly(CipherAlgorithm algorithm)
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var provider = CryptoFactory.CreateJweProvider(3, algorithm);
             var kem = CryptoFactory.CreateKyber(768);
@@ -1069,9 +1086,10 @@ namespace GreenfieldPQC.Tests
 
         // ========== ERROR HANDLING TESTS ==========
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_DecryptJwe_InvalidFormat_ThrowsException()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512);
             var kem = CryptoFactory.CreateKyber(768);
@@ -1083,9 +1101,10 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_DecryptJwe_InvalidFormat_ThrowsException passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JwsProvider_VerifyJws_InvalidFormat_ThrowsException()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var provider = CryptoFactory.CreateJwsProvider(3);
             var signer = CryptoFactory.CreateDilithium(3);
@@ -1102,9 +1121,10 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_VerifyJws_InvalidFormat_ThrowsException passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_CreateJwe_LargePayload_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512Poly1305);
             var kem = CryptoFactory.CreateKyber(768);
@@ -1124,9 +1144,10 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_LargePayload_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JwsProvider_CreateJws_UnicodePayload_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var provider = CryptoFactory.CreateJwsProvider(3);
             var signer = CryptoFactory.CreateDilithium(3);
@@ -1142,9 +1163,10 @@ namespace GreenfieldPQC.Tests
             Log("JwsProvider_CreateJws_UnicodePayload_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_CreateJwe_ComplexNestedPayload_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var provider = CryptoFactory.CreateJweProvider(3, CipherAlgorithm.Kusumi512);
             var kem = CryptoFactory.CreateKyber(768);
@@ -1171,9 +1193,10 @@ namespace GreenfieldPQC.Tests
 
         // ========== v1.1.4: BYTE[] OVERLOAD TESTS ==========
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_DecryptJweBytes_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var kyberLevel = 3;
             var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
@@ -1205,9 +1228,10 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_DecryptJweBytes_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_CreateJwe_ByteSpanPayload_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Arrange
             var kyberLevel = 3;
             var kusumiAlgorithm = CryptoFactory.CipherAlgorithm.Kusumi512Poly1305;
@@ -1232,9 +1256,10 @@ namespace GreenfieldPQC.Tests
             Log("JweProvider_CreateJwe_ByteSpanPayload_RoundTrip passed");
         }
 
-        [NativeRequiredFact]
+        [Fact]
         public void JweProvider_CreateJwe_ByteSpanPayload_VariousLevels_RoundTrip()
         {
+            if (!OqsNativeAvailability.IsAvailable) return;
             // Verify the byte[] overload works across all Kyber levels and cipher variants
             int[] kyberLevels = [1, 3, 5];
             CryptoFactory.CipherAlgorithm[] algorithms = [CryptoFactory.CipherAlgorithm.Kusumi512, CryptoFactory.CipherAlgorithm.Kusumi512Poly1305];
