@@ -1,5 +1,6 @@
 using GreenfieldPQC.Cryptography;
 using System;
+using System.Security.Cryptography;
 
 namespace GreenfieldPQC.Tests
 {
@@ -32,7 +33,7 @@ namespace GreenfieldPQC.Tests
 
         private static bool IsNativeLoadFailure(Exception ex)
         {
-            if (ex is DllNotFoundException or PlatformNotSupportedException)
+            if (ex is DllNotFoundException or PlatformNotSupportedException or CryptographicException)
                 return true;
             return ex.InnerException != null && IsNativeLoadFailure(ex.InnerException);
         }
