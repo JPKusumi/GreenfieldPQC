@@ -1,39 +1,8 @@
 using GreenfieldPQC.Cryptography;
 using System;
-using Xunit;
 
 namespace GreenfieldPQC.Tests
 {
-    /// <summary>
-    /// Marks a fact test as requiring the liboqs native library
-    /// (oqs.dll / liboqs.so / liboqs.dylib).
-    /// The test is automatically skipped when the native library cannot be loaded,
-    /// such as in a CI environment where the native binaries have not yet been built.
-    /// </summary>
-    public sealed class NativeRequiredFactAttribute : FactAttribute
-    {
-        public NativeRequiredFactAttribute()
-        {
-            if (!OqsNativeAvailability.IsAvailable)
-                Skip = "Skipped: liboqs native library not available in this environment.";
-        }
-    }
-
-    /// <summary>
-    /// Marks a theory test as requiring the liboqs native library
-    /// (oqs.dll / liboqs.so / liboqs.dylib).
-    /// The test is automatically skipped when the native library cannot be loaded,
-    /// such as in a CI environment where the native binaries have not yet been built.
-    /// </summary>
-    public sealed class NativeRequiredTheoryAttribute : TheoryAttribute
-    {
-        public NativeRequiredTheoryAttribute()
-        {
-            if (!OqsNativeAvailability.IsAvailable)
-                Skip = "Skipped: liboqs native library not available in this environment.";
-        }
-    }
-
     /// <summary>
     /// Lazily probes whether the liboqs native library can be successfully loaded
     /// in the current process environment.
