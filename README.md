@@ -197,7 +197,10 @@ await cipher.EncryptStreamAsync(input, output, progress: progress, nonceGenerato
 JWS provides signed JWTs (three-segment format: header.payload.signature) for integrity and authenticity using Dilithium.
 
 ### In Theory
-Compact tokens with post-quantum signatures, suitable for auth flows like OAuth.
+
+A JSON Web Signature is a self-contained, portable token that binds a claims payload to a cryptographic signature, making the payload tamper-evident and attributable to a specific key holder. The payload—typically a JSON object encoding assertions such as a user identity, role, or authorization scope—is Base64Url-encoded alongside a header that names the algorithm, then signed with the issuer's private key. Any relying party that holds the corresponding public key can verify the signature independently, without contacting the issuer, making JWS well-suited for stateless authentication flows like OAuth 2.0 and OpenID Connect.
+
+Classical JWS implementations rely on RSA or ECDSA, both of which are broken by Shor's algorithm on a sufficiently capable quantum computer. GreenfieldPQC substitutes Dilithium (ML-DSA, NIST FIPS 204)—a lattice-based scheme whose hardness assumptions are not threatened by known quantum algorithms. The resulting tokens carry the same three-segment compact serialization (`header.payload.signature`) and can be dropped into existing JWT workflows; the only difference is that the signature bytes are produced and verified by a quantum-safe primitive, extending the trustworthiness of signed claims well beyond the quantum computing horizon.
 
 ### In Practice
 API Highlights (Dilithium levels: 2, 3, 5):
@@ -221,7 +224,10 @@ Best Practices: Use short expirations; validate claims post-verification.
 JWE provides encrypted JWTs (five-segment format: header.encrypted_key.iv.ciphertext.tag) for confidentiality using Kyber and Kusumi512.
 
 ### In Theory
-Hybrid encryption: Kyber for key wrapping, Kusumi512 for payload.
+
+Encrypting a JWT payload requires two layers of cryptography: a key-encapsulation step to establish a shared secret, and a symmetric cipher to encrypt the actual payload. JWE formalizes this "hybrid" model. In GreenfieldPQC, Kyber (ML-KEM, NIST FIPS 203) handles key encapsulation—the sender uses the recipient's public key to generate a shared secret and an encapsulated-key ciphertext; the recipient uses their private key to recover the same shared secret. Kusumi512 (or Kusumi512Poly1305 for authenticated encryption) then uses that shared secret to encrypt the payload.
+
+This two-layer approach is necessary because asymmetric post-quantum schemes like Kyber are designed to exchange a fixed-size shared secret, not to directly encrypt arbitrary-length data. Offloading bulk encryption to a fast symmetric cipher keeps performance practical for any payload size. The five-segment compact JWE serialization (`header.encrypted_key.iv.ciphertext.tag`) carries all the material the recipient needs in a single, self-contained token, making JWE the canonical format for transmitting confidential claims—such as sensitive user attributes, session secrets, or cryptographic key material—between parties with quantum-safe confidentiality guarantees.
 
 ### In Practice
 API Highlights (Kyber levels: 1, 3, 5; Kusumi algorithm: Kusumi512 plain or Kusumi512Poly1305 AEAD):
@@ -229,7 +235,7 @@ API Highlights (Kyber levels: 1, 3, 5; Kusumi algorithm: Kusumi512 plain or Kusu
 - CreateJwe(payload, publicKey): Returns JWE string (serializes the object payload to JSON, then encrypts).
 - CreateJwe(ReadOnlySpan\<byte\> payloadBytes, publicKey): Returns JWE string (encrypts raw bytes directly, no intermediate string). **Prefer this for sensitive byte[] payloads.**
 - DecryptJwe(jweToken, privateKey): Returns raw decrypted payload as string (JSON); deserialize as needed if valid, throws otherwise.
-- DecryptJweBytes(jweToken, privateKey): Returns raw decrypted payload as **byte[]**. The caller can zero the array with `Array.Clear` after use. **Prefer this when the ability to clear plaintext from memory is required.**
+- DecryptJweBytes(jweToken, privateKey): Returns raw decrypted payload as **byte[]**. The caller can zero the array with `CryptographicOperations.ZeroMemory` after use. **Prefer this when the ability to clear plaintext from memory is required.**
 
 Round-Trip Example (string API, backwards-compatible):
 ```csharp
@@ -254,12 +260,12 @@ string jweToken = jweProvider.CreateJwe(sensitivePayload.AsSpan(), pubKey);
 // Decrypt to bytes so the caller controls the lifetime
 byte[] decryptedBytes = jweProvider.DecryptJweBytes(jweToken, privKey);
 // ... process decryptedBytes ...
-Array.Clear(decryptedBytes, 0, decryptedBytes.Length);  // Zero when done
+CryptographicOperations.ZeroMemory(decryptedBytes);  // Zero when done
 ```
 
 **Security Guidance:**
 - **Never log or transmit plaintext payloads or key material in telemetry.** Treat decrypted data as a secret.
-- .NET strings are immutable and cannot be reliably zeroed from memory. If you need best-effort plaintext memory hygiene, use `DecryptJweBytes` (returns `byte[]`) and call `Array.Clear` on the result when finished.
+- .NET strings are immutable and cannot be reliably zeroed from memory. If you need best-effort plaintext memory hygiene, use `DecryptJweBytes` (returns `byte[]`) and call `CryptographicOperations.ZeroMemory` on the result when finished.
 - For payload creation, use the `CreateJwe(ReadOnlySpan<byte>, byte[])` overload to avoid an intermediate JSON string being materialized on the heap.
 - Note: this is best-effort in managed code. The native liboqs library handles key material internally, and its memory behavior is outside GreenfieldPQC's control.
 
